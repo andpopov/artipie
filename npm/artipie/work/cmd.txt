@@ -1,0 +1,10 @@
+npm publish @hello/simple-npm-project --registry http://localhost:8081/my-npm
+npm publish tmp/@hello/simple-npm-project/ --registry http://host.testcontainers.internal:58599 --loglevel verbose
+
+# works:
+npm publish @hello\simple-npm-project\ --registry http://localhost:8081/my-npm --loglevel verbose
+
+npm install @hello/simple-npm-project --registry http://localhost:8081/my-npm --loglevel verbose
+
+
+npm publish @hello\simple-npm-project\ --registry http://localhost:8081/my-npm

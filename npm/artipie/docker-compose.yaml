@@ -1,0 +1,36 @@
+version: "3.3"
+services:
+  artipie:
+    image: artipie/artipie:latest
+    container_name: artipie
+    restart: unless-stopped
+    environment:
+      - ARTIPIE_USER_NAME=artipie
+      - ARTIPIE_USER_PASS=artipie
+    networks:
+      - artipie-net
+    ports:
+      - "8081:8080"
+    volumes:
+      # change /usr/local/artipie to any convenient location, this is the config folder
+      - C:\artipie\config:/etc/artipie/ # mount of Artipie configuration
+      - C:\artipie\repo:/var/artipie/repo # mount of repository configurations
+      - C:\artipie\packages:/var/artipie/packages # mount of repository configurations
+  front:
+    image: artipie/front:latest
+    container_name: front
+    restart: unless-stopped
+    networks:
+      - artipie-net
+    environment:
+      - ARTIPIE_USER_NAME=artipie
+      - ARTIPIE_USER_PASS=artipie
+      - TKN_KEY=abc123
+    volumes:
+      # change /usr/local/artipie to any convenient location, this is the config folder
+      - C:\artipie\repo:/var/artipie/repo
+    ports:
+      - "8080:8080"
+networks:
+  artipie-net:
+    driver: bridge

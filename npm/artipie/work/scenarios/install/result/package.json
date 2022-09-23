@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@hello/simple-npm-project": "^1.0.1"
+  }
+}

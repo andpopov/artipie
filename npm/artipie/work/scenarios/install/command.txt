@@ -1,0 +1,5 @@
+C:\artipie\work\scenarios\install>npm install @hello/simple-npm-project --registry http://localhost:8081/my-npm
+
+added 1 package in 397ms
+
+C:\artipie\work\scenarios\install>

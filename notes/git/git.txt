@@ -1,0 +1,6 @@
+# merge no commit
+git merge rpm --no-commit --squash
+
+# reset/revert the remote branch to <commit>:
+git reset --hard <commit-hash>
+git push -f origin master

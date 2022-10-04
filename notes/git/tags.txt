@@ -1,0 +1,11 @@
+# list of tags
+git tag
+
+# new tag
+git tag v0.10.6
+
+# push tags
+git push --tags upstream
+
+# remote tags
+git ls-remote --tags upstream

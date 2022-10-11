@@ -1,0 +1,1 @@
+docker run -it -v C:\artipie\config:/etc/artipie/ -v C:\artipie\repo:/var/artipie/repo -v C:\artipie\packages:/var/artipie/packages  artipie/artipie:latest

@@ -5,46 +5,41 @@
 package com.artipie.auth;
 
 import com.artipie.http.auth.Authentication;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import org.keycloak.TokenVerifier;
 import org.keycloak.authorization.client.AuthzClient;
+import org.keycloak.common.VerificationException;
+import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.idm.authorization.AuthorizationRequest;
 import org.keycloak.representations.idm.authorization.AuthorizationResponse;
 
 /**
  * Authentication based on keycloak.
- * @since 0.3
+ * @since 0.28
  */
 public final class AuthFromKeycloak implements Authentication {
     /**
-     * Default ctor with system environment.
+     * Ctor.
      */
     public AuthFromKeycloak() {
     }
 
-
     @Override
     @SuppressWarnings("PMD.OnlyOneReturn")
     public Optional<User> user(final String username, final String password) {
-        final Optional<User> result;
-
         AuthzClient authzClient = AuthzClient.create();
-
-        // create an authorization request
         AuthorizationRequest request = new AuthorizationRequest();
-
-        // send the entitlement request to the server in order to
-        // obtain an RPT with all permissions granted to the user
-        AuthorizationResponse response = authzClient.authorization(username, password).authorize(request);
-        String rpt = response.getToken();
-
-        if (Objects.equals(Objects.requireNonNull(username), username)
-            && Objects.equals(Objects.requireNonNull(password), password)) {
-            result = Optional.of(new User(username));
-        } else {
-            result = Optional.empty();
+        try {
+            AuthorizationResponse response = authzClient.authorization(username, password).authorize(request);
+            AccessToken token = TokenVerifier.create(response.getToken(), AccessToken.class).getToken();
+            final Set<String> roles = token.getRealmAccess().getRoles();
+            return Optional.of(new User(username, roles));
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (VerificationException e) {
+            throw new RuntimeException(e);
         }
-        return result;
     }
 
     @Override

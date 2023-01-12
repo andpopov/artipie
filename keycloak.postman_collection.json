@@ -1,0 +1,100 @@
+{
+	"info": {
+		"_postman_id": "7e56a37a-d0c4-4d24-9e11-b94da02ec7b0",
+		"name": "keycloak",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "4475427"
+	},
+	"item": [
+		{
+			"name": "openid-configuration",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{server}}/realms/{{realm}}/.well-known/openid-configuration",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"realms",
+						"{{realm}}",
+						".well-known",
+						"openid-configuration"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "user-authorize",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "content-type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "grant_type",
+							"value": "password",
+							"type": "text"
+						},
+						{
+							"key": "username",
+							"value": "user1",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "password1",
+							"type": "text"
+						},
+						{
+							"key": "audience",
+							"value": "API_IDENTIFIER",
+							"type": "text"
+						},
+						{
+							"key": "client_id",
+							"value": "artipie_client",
+							"type": "text"
+						},
+						{
+							"key": "client_secret",
+							"value": "afxb95b9Q1CuYxg0KrfsafxcF05CKItL",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{server}}/realms/{{realm}}/protocol/openid-connect/token",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"realms",
+						"{{realm}}",
+						"protocol",
+						"openid-connect",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "userinfo",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}

@@ -1,8 +1,8 @@
 {
-  "realm": "artipie_realm",
+  "realm": "test_realm",
   "auth-server-url": "http://localhost:8080",
-  "resource": "artipie_client",
+  "resource": "test_client",
   "credentials": {
-    "secret": "afxb95b9Q1CuYxg0KrfsafxcF05CKItL"
+    "secret": "nfAFMhoaxOxrnmurIuSmedHcTkXAHaSY"
   }
 }

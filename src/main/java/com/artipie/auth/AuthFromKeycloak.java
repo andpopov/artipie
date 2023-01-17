@@ -31,7 +31,7 @@ public final class AuthFromKeycloak implements Authentication {
         AuthzClient authzClient = AuthzClient.create();
         AuthorizationRequest request = new AuthorizationRequest();
         try {
-            AuthorizationResponse response = authzClient.authorization(username, password).authorize(request);
+            AuthorizationResponse response = authzClient.authorization(username, password, "openid").authorize(request);
             AccessToken token = TokenVerifier.create(response.getToken(), AccessToken.class).getToken();
             final Set<String> roles = token.getRealmAccess().getRoles();
             return Optional.of(new User(username, roles));

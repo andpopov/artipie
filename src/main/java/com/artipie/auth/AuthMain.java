@@ -32,7 +32,7 @@ public class AuthMain {
 
         // send the entitlement request to the server in order to
         // obtain an RPT with all permissions granted to the user
-        AuthorizationResponse response = authzClient.authorization("user11", "password1", "openid").authorize(request);
+        AuthorizationResponse response = authzClient.authorization("user1", "password", "openid").authorize(request);
         String rpt = response.getToken();
 
         System.out.println("You got an RPT: " + rpt);

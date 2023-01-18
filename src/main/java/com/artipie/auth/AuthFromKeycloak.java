@@ -5,6 +5,7 @@
 package com.artipie.auth;
 
 import com.artipie.http.auth.Authentication;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import org.keycloak.TokenVerifier;
@@ -33,7 +34,9 @@ public final class AuthFromKeycloak implements Authentication {
         try {
             AuthorizationResponse response = authzClient.authorization(username, password, "openid").authorize(request);
             AccessToken token = TokenVerifier.create(response.getToken(), AccessToken.class).getToken();
-            final Set<String> roles = token.getRealmAccess().getRoles();
+            final Set<String> roles = new HashSet<>();
+            roles.addAll(token.getRealmAccess().getRoles());
+            token.getResourceAccess().forEach((k, v) -> roles.addAll(v.getRoles()));
             return Optional.of(new User(username, roles));
         } catch (RuntimeException e) {
             throw e;

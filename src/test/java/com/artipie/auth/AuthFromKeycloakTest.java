@@ -1,6 +1,7 @@
 package com.artipie.auth;
 
 import com.artipie.asto.test.TestResource;
+import com.artipie.tools.CompilerTool;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -24,7 +25,7 @@ public class AuthFromKeycloakTest {
         final Set<Path> sources = paths(
             new TestResource(String.format("%s", resources)).asPath(), ".java"
         );
-        System.out.println(sources);
+        final CompilerTool compiler = new CompilerTool();
     }
 
     private static Set<Path> paths(final Path dir, final String ext) throws IOException {

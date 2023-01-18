@@ -3,17 +3,11 @@ package com.artipie.auth;
 import java.util.Collection;
 import org.keycloak.TokenVerifier;
 import org.keycloak.authorization.client.AuthzClient;
-import org.keycloak.authorization.client.representation.TokenIntrospectionResponse;
-import org.keycloak.authorization.client.resource.AuthorizationResource;
 import org.keycloak.common.VerificationException;
 import org.keycloak.representations.AccessToken;
-import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.authorization.AuthorizationRequest;
 import org.keycloak.representations.idm.authorization.AuthorizationResponse;
 import org.keycloak.representations.idm.authorization.Permission;
-
-import org.keycloak.admin.client.Keycloak;
-import org.keycloak.representations.idm.RealmRepresentation;
 
 public class AuthMain {
     public static void main(String[] args) {
@@ -58,29 +52,5 @@ public class AuthMain {
 //            "admin-cli");
 //        RealmRepresentation realm = keycloak.realm("artipie-realm").toRepresentation();
 
-        final Keycloak keycloak = Keycloak.getInstance(
-            "http://localhost:8080",
-            "artipie_realm",
-            "user1",
-            "password1",
-            "artipie_client",
-            null,
-            null,
-            null,
-            false,
-            null
-        );
-        // now you can use the RPT to access protected resources on the resource server
-
-
-        // introspect the token
-        TokenIntrospectionResponse requestingPartyToken = authzClient.protection().introspectRequestingPartyToken(rpt);
-
-        System.out.println("Token status is: " + requestingPartyToken.getActive());
-        System.out.println("Permissions granted by the server: ");
-
-        for (Permission granted : requestingPartyToken.getPermissions()) {
-            System.out.println(granted);
-        }
     }
 }

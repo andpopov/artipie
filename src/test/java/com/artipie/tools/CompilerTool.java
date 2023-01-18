@@ -39,7 +39,7 @@ public class CompilerTool {
 
     private DiagnosticListener<JavaFileObject> diagnostic = new DiagnosticCollector<JavaFileObject>();
 
-    private final Set<Blob> blobs = new HashSet<>();
+    private final List<Blob> blobs = new ArrayList<>();
 
     public CompilerTool() {
     }
@@ -72,7 +72,7 @@ public class CompilerTool {
         return diagnostic;
     }
 
-    public Set<Blob> blobs() {
+    public List<Blob> blobs() {
         return blobs;
     }
 

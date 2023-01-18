@@ -1,8 +1,10 @@
 package com.artipie.auth;
 
 import com.artipie.asto.test.TestResource;
+import com.artipie.tools.BlobClassLoader;
 import com.artipie.tools.CompilerTool;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,7 +19,7 @@ import org.junit.jupiter.api.Test;
  */
 public class AuthFromKeycloakTest {
     @Test
-    void docker() throws IOException {
+    void docker() throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         final String resources = "auth/keycloak-docker-initializer";
         final Set<Path> jars = paths(
             new TestResource(String.format("%s/lib", resources)).asPath(), ".jar"
@@ -29,7 +31,10 @@ public class AuthFromKeycloakTest {
         compiler.addClasspaths(jars.stream().map(Path::toFile).toList());
         compiler.addSources(sources.stream().map(Path::toFile).toList());
         compiler.compile();
-        System.out.println(compiler.blobs());
+        BlobClassLoader cl = new BlobClassLoader();
+        cl.addBlobs(compiler.blobs());
+        Class<?> cls = Class.forName("keycloak.KeycloakDockerInitializer", true, cl);
+        cls.getMethod("main").invoke(new String[0]);
     }
 
     private static Set<Path> paths(final Path dir, final String ext) throws IOException {

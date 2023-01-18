@@ -1,6 +1,7 @@
 package com.artipie.auth;
 
 import com.artipie.asto.test.TestResource;
+import com.artipie.http.auth.Authentication;
 import com.artipie.tools.Blob;
 import com.artipie.tools.BlobClassLoader;
 import com.artipie.tools.CompilerTool;
@@ -18,6 +19,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -42,7 +44,12 @@ public class AuthFromKeycloakTest {
 
     @Test
     void docker() {
-        System.out.println();
+        final Optional<Authentication.User> user = new AuthFromKeycloak().user("user1", "password");
+        user.map(u -> {
+            System.out.println(u.name());
+            System.out.println(u.groups());
+            return 1;
+        });
     }
 
     private static void prepareJarsAndSources() throws Throwable {

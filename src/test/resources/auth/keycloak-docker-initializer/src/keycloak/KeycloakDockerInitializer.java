@@ -1,6 +1,7 @@
 package keycloak;
 
 import java.util.Collections;
+import java.util.Objects;
 import javax.ws.rs.core.Response;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RealmResource;
@@ -23,31 +24,48 @@ public class KeycloakDockerInitializer {
     private final static String USER_PASSWORD = "password";
 
     public static void main(String[] args) {
-        Keycloak keycloak = Keycloak.getInstance(
-            KEYCLOAK_HOST,
-            "master",
-            "admin",
-            "admin",
-            "admin-cli");
-        createRealm(keycloak);
-        createRealmRole(keycloak);
-        createClient(keycloak);
-        createClientRole(keycloak);
-        createUserNew(keycloak);
+        final String host;
+        if (!Objects.isNull(args) && args.length > 0) {
+            host = args[0];
+        } else {
+            host = KEYCLOAK_HOST;
+        }
+        new KeycloakDockerInitializer(host).init();
     }
 
-    private static void createRealm(final Keycloak keycloak) {
+    private final String host;
+
+    public KeycloakDockerInitializer(final String host) {
+        this.host = host;
+    }
+
+    public void init() {
+        System.out.println(host);
+//        Keycloak keycloak = Keycloak.getInstance(
+//            host,
+//            "master",
+//            "admin",
+//            "admin",
+//            "admin-cli");
+//        createRealm(keycloak);
+//        createRealmRole(keycloak);
+//        createClient(keycloak);
+//        createClientRole(keycloak);
+//        createUserNew(keycloak);
+    }
+
+    private void createRealm(final Keycloak keycloak) {
         RealmRepresentation realm = new RealmRepresentation();
         realm.setRealm(REALM);
         realm.setEnabled(true);
         keycloak.realms().create(realm);
     }
 
-    private static void createRealmRole(final Keycloak keycloak) {
+    private void createRealmRole(final Keycloak keycloak) {
         keycloak.realm(REALM).roles().create(new RoleRepresentation(REALM_ROLE, null, false));
     }
 
-    private static void createClient(final Keycloak keycloak) {
+    private void createClient(final Keycloak keycloak) {
         ClientRepresentation client = new ClientRepresentation();
         client.setEnabled(true);
         client.setPublicClient(false);
@@ -61,7 +79,7 @@ public class KeycloakDockerInitializer {
         keycloak.realm(REALM).clients().create(client);
     }
 
-    private static void createClientRole(final Keycloak keycloak) {
+    private void createClientRole(final Keycloak keycloak) {
         RoleRepresentation clientRoleRepresentation = new RoleRepresentation();
         clientRoleRepresentation.setName(CLIENT_ROLE);
         clientRoleRepresentation.setClientRole(true);
@@ -77,7 +95,7 @@ public class KeycloakDockerInitializer {
             );
     }
 
-    private static void createUserNew(final Keycloak keycloak) {
+    private void createUserNew(final Keycloak keycloak) {
         // Define user
         UserRepresentation user = new UserRepresentation();
         user.setEnabled(true);

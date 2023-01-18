@@ -4,6 +4,9 @@ import com.artipie.asto.test.TestResource;
 import com.artipie.tools.BlobClassLoader;
 import com.artipie.tools.CompilerTool;
 import java.io.IOException;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -12,14 +15,21 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashSet;
 import java.util.Set;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
  * Test for {@link AuthFromKeycloak}
  */
 public class AuthFromKeycloakTest {
-    @Test
-    void docker() throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    private static MethodHandle main;
+
+    @BeforeAll
+    static void init() throws Throwable {
+        loadClass();
+    }
+
+    private static void loadClass() throws Throwable {
         final String resources = "auth/keycloak-docker-initializer";
         final Set<Path> jars = paths(
             new TestResource(String.format("%s/lib", resources)).asPath(), ".jar"
@@ -34,7 +44,14 @@ public class AuthFromKeycloakTest {
         BlobClassLoader cl = new BlobClassLoader();
         cl.addBlobs(compiler.blobs());
         Class<?> cls = Class.forName("keycloak.KeycloakDockerInitializer", true, cl);
-//        cls.getMethod("main").invoke(new String[0]);
+        MethodHandles.Lookup publicLookup = MethodHandles.publicLookup();
+        MethodType mt = MethodType.methodType(void.class, String[].class);
+        main = publicLookup.findStatic(cls, "main", mt);
+    }
+
+    @Test
+    void docker() throws Throwable {
+        main.invoke(new String[]{"http://localhost:8080"});
     }
 
     private static Set<Path> paths(final Path dir, final String ext) throws IOException {

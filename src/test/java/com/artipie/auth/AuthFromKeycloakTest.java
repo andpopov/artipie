@@ -26,6 +26,10 @@ public class AuthFromKeycloakTest {
             new TestResource(String.format("%s", resources)).asPath(), ".java"
         );
         final CompilerTool compiler = new CompilerTool();
+        compiler.addClasspaths(jars.stream().map(Path::toFile).toList());
+        compiler.addSources(sources.stream().map(Path::toFile).toList());
+        compiler.compile();
+        System.out.println(compiler.blobs());
     }
 
     private static Set<Path> paths(final Path dir, final String ext) throws IOException {

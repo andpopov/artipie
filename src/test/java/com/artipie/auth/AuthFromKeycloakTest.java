@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +24,7 @@ import org.junit.jupiter.api.Test;
  * Test for {@link AuthFromKeycloak}
  */
 public class AuthFromKeycloakTest {
+    private static BlobClassLoader loader;
     private static MethodHandle main;
 
     @BeforeAll
@@ -40,17 +44,37 @@ public class AuthFromKeycloakTest {
         compiler.addClasspaths(jars.stream().map(Path::toFile).toList());
         compiler.addSources(sources.stream().map(Path::toFile).toList());
         compiler.compile();
-        BlobClassLoader cl = new BlobClassLoader();
-        cl.addBlobs(compiler.blobs());
-        Class<?> cls = Class.forName("keycloak.KeycloakDockerInitializer", true, cl);
+        final URLClassLoader urlclassloader = new URLClassLoader(jars.stream().map(file -> {
+            try {
+                return file.toFile().toURI().toURL();
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+        }).toList().toArray(new URL[0]), null);
+        loader = new BlobClassLoader(urlclassloader);
+        loader.addBlobs(compiler.blobs());
+        Class<?> cls = Class.forName("keycloak.KeycloakDockerInitializer", true, loader);
         MethodHandles.Lookup publicLookup = MethodHandles.publicLookup();
         MethodType mt = MethodType.methodType(void.class, String[].class);
         main = publicLookup.findStatic(cls, "main", mt);
     }
 
+    void initializeKeycloak() throws Throwable {
+        final Thread thread = new Thread(() -> {
+            try {
+                main.invoke(new String[]{"http://localhost:8080"});
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+        });
+        thread.setContextClassLoader(loader);
+        thread.start();
+        thread.join();
+    }
+
     @Test
     void docker() throws Throwable {
-        main.invoke(new String[]{"http://localhost:8080"});
+        initializeKeycloak();
     }
 
     private static Set<Path> paths(final Path dir, final String ext) throws IOException {

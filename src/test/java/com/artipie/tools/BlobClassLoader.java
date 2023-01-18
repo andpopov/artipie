@@ -8,6 +8,11 @@ public class BlobClassLoader extends ClassLoader {
     private final Map<String, Blob> blobs = new TreeMap<String, Blob>();
 
     public BlobClassLoader() {
+        super();
+    }
+
+    public BlobClassLoader(final ClassLoader parent) {
+        super(parent);
     }
 
     public void addBlobs(Blob... blobs) {

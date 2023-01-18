@@ -40,18 +40,17 @@ public class KeycloakDockerInitializer {
     }
 
     public void init() {
-        System.out.println(host);
-//        Keycloak keycloak = Keycloak.getInstance(
-//            host,
-//            "master",
-//            "admin",
-//            "admin",
-//            "admin-cli");
-//        createRealm(keycloak);
-//        createRealmRole(keycloak);
-//        createClient(keycloak);
-//        createClientRole(keycloak);
-//        createUserNew(keycloak);
+        Keycloak keycloak = Keycloak.getInstance(
+            host,
+            "master",
+            "admin",
+            "admin",
+            "admin-cli");
+        createRealm(keycloak);
+        createRealmRole(keycloak);
+        createClient(keycloak);
+        createClientRole(keycloak);
+        createUserNew(keycloak);
     }
 
     private void createRealm(final Keycloak keycloak) {

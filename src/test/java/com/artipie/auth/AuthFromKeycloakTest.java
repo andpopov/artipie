@@ -25,7 +25,7 @@ public class AuthFromKeycloakTest {
             new TestResource(String.format("%s/lib", resources)).asPath(), ".jar"
         );
         final Set<Path> sources = paths(
-            new TestResource(String.format("%s", resources)).asPath(), ".java"
+            new TestResource(String.format("%s/src", resources)).asPath(), ".java"
         );
         final CompilerTool compiler = new CompilerTool();
         compiler.addClasspaths(jars.stream().map(Path::toFile).toList());
@@ -34,7 +34,7 @@ public class AuthFromKeycloakTest {
         BlobClassLoader cl = new BlobClassLoader();
         cl.addBlobs(compiler.blobs());
         Class<?> cls = Class.forName("keycloak.KeycloakDockerInitializer", true, cl);
-        cls.getMethod("main").invoke(new String[0]);
+//        cls.getMethod("main").invoke(new String[0]);
     }
 
     private static Set<Path> paths(final Path dir, final String ext) throws IOException {

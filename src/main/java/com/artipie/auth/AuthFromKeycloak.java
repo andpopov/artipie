@@ -17,7 +17,7 @@ import org.keycloak.representations.idm.authorization.AuthorizationResponse;
 
 /**
  * Authentication based on keycloak.
- * @since 0.28
+ * @since 0.28.0
  */
 public final class AuthFromKeycloak implements Authentication {
     /**

@@ -23,11 +23,24 @@ import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 /**
  * Test for {@link AuthFromKeycloak}
  */
+@Testcontainers
 public class AuthFromKeycloakTest {
+    @Container
+    private static GenericContainer<?> keycloak = new GenericContainer<>(
+        DockerImageName.parse("quay.io/keycloak/keycloak:latest")
+    )
+        .withEnv("KEYCLOAK_ADMIN", "admin")
+        .withEnv("KEYCLOAK_ADMIN_PASSWORD", "admin")
+        .withExposedPorts(8080)
+        .withCommand("start-dev");
     private static Set<Path> jars;
     private static Set<Path> sources;
     private static BlobClassLoader blobClassloader;
@@ -90,7 +103,7 @@ public class AuthFromKeycloakTest {
         ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(blobClassloader);
-            main.invoke(new String[]{"http://localhost:8080"});
+            main.invoke(new String[]{String.format("http://localhost:%s", keycloak.getMappedPort(8080))});
         } finally {
             Thread.currentThread().setContextClassLoader(originalClassLoader);
         }

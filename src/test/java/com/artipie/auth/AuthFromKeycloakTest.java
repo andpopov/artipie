@@ -1,7 +1,9 @@
 package com.artipie.auth;
 
+import com.amihaiemil.eoyaml.Yaml;
 import com.artipie.asto.test.TestResource;
-import com.artipie.http.auth.Authentication;
+import com.artipie.settings.YamlSettings;
+import com.artipie.settings.users.Users;
 import com.artipie.tools.Blob;
 import com.artipie.tools.BlobClassLoader;
 import com.artipie.tools.CompilerTool;
@@ -19,8 +21,8 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
@@ -56,13 +58,49 @@ public class AuthFromKeycloakTest {
     }
 
     @Test
-    void docker() {
-        final Optional<Authentication.User> user = new AuthFromKeycloak().user("user1", "password");
-        user.map(u -> {
-            System.out.println(u.name());
-            System.out.println(u.groups());
-            return 1;
-        });
+    void docker() throws IOException {
+        final String user = "user1";
+        final String pass = "password";
+        final YamlSettings settings = AuthFromKeycloakTest.settings(
+                String.format("http://localhost:%s", keycloak.getMappedPort(8080)),
+                "test_realm",
+                "test_client",
+                "secret"
+        );
+        settings
+                .credentials()
+                .thenCompose(Users::auth)
+                .thenApply(auth -> auth.user(user, pass));
+    }
+
+    /**
+     * Composes yaml settings.
+     * @param url Keycloak server url
+     * @param realm Keycloak realm
+     * @param clientId Keycloak client application ID
+     * @param clientPassword Keycloak client application password
+     * @checkstyle ParameterNumberCheck (3 lines)
+     */
+    private static YamlSettings settings(final String url, final String realm, final String clientId, final String clientPassword) throws IOException {
+        return new YamlSettings(
+                Yaml.createYamlMappingBuilder().add(
+                        "meta",
+                        Yaml.createYamlMappingBuilder().add(
+                                "credentials",
+                                Yaml.createYamlSequenceBuilder()
+                                        .add(
+                                                Yaml.createYamlMappingBuilder()
+                                                        .add("type", "keycloak")
+                                                        .add("url", url)
+                                                        .add("realm", realm)
+                                                        .add("client-id", clientId)
+                                                        .add("client-password", clientPassword)
+                                                        .build()
+                                        ).build()
+                        ).build()
+                ).build(),
+                null
+        );
     }
 
     private static void prepareJarsAndSources() throws Throwable {

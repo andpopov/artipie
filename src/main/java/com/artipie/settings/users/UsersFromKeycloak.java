@@ -4,9 +4,13 @@
  */
 package com.artipie.settings.users;
 
+import com.amihaiemil.eoyaml.YamlMapping;
 import com.artipie.auth.AuthFromKeycloak;
 import com.artipie.http.auth.Authentication;
+import org.keycloak.authorization.client.Configuration;
+
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -15,6 +19,18 @@ import java.util.concurrent.CompletionStage;
  * @since 0.28.0
  */
 public final class UsersFromKeycloak implements Users {
+    private final Configuration configuration;
+
+    public UsersFromKeycloak(YamlMapping settings) {
+        this.configuration = new Configuration(
+                settings.string("url"),
+                settings.string("realm"),
+                settings.string("client-id"),
+                Map.of("secret", settings.string("client-password")),
+                null
+        );
+    }
+
     @Override
     public CompletionStage<List<User>> list() {
         return CompletableFuture.failedFuture(
@@ -39,6 +55,6 @@ public final class UsersFromKeycloak implements Users {
 
     @Override
     public CompletionStage<Authentication> auth() {
-        return CompletableFuture.completedFuture(new AuthFromKeycloak());
+        return CompletableFuture.completedFuture(new AuthFromKeycloak(configuration));
     }
 }

@@ -268,7 +268,7 @@ public final class YamlSettings implements Settings {
          * Credentials type: keycloak.
          */
         KEYCLOAK((settings, mapping) -> CompletableFuture.completedStage(
-            new UsersFromKeycloak()
+            new UsersFromKeycloak(mapping)
         ));
 
         /**

@@ -81,11 +81,11 @@ public class AuthFromKeycloakTest {
      */
     @BeforeAll
     static void init() throws Throwable {
-        prepareJarsAndSources();
-        final List<CodeBlob> blobs = compileKeycloakInitializer();
-        final CodeClassLoader codeClassloader = initCodeClassloader(blobs);
-        final MethodHandle main = mainMethod(codeClassloader);
-        initializeKeycloakInstance(codeClassloader, main);
+        AuthFromKeycloakTest.prepareJarsAndSources();
+        final List<CodeBlob> blobs = AuthFromKeycloakTest.compileKeycloakInitializer();
+        final CodeClassLoader codeClassloader = AuthFromKeycloakTest.initCodeClassloader(blobs);
+        final MethodHandle main = AuthFromKeycloakTest.mainMethod(codeClassloader);
+        AuthFromKeycloakTest.initializeKeycloakInstance(codeClassloader, main);
     }
 
     @Test
@@ -93,7 +93,7 @@ public class AuthFromKeycloakTest {
         final String user = "user1";
         final String pass = "password";
         final YamlSettings settings = AuthFromKeycloakTest.settings(
-                keycloakUrl(),
+                AuthFromKeycloakTest.keycloakUrl(),
                 "test_realm",
                 "test_client",
                 "secret"

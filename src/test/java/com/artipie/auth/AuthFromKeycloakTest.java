@@ -73,13 +73,19 @@ public class AuthFromKeycloakTest {
      */
     private static Set<URL> sources;
 
+    /**
+     * Compiles, loads 'keycloak.KeycloakDockerInitializer' class and start 'main'-method.
+     * Runtime compilation is required because 'keycloak.KeycloakDockerInitializer' class
+     * has a clash of dependencies with artipie's dependency 'com.jcabi:jcabi-github:1.3.2'.
+     *
+     */
     @BeforeAll
     static void init() throws Throwable {
         prepareJarsAndSources();
         final List<CodeBlob> blobs = compileKeycloakInitializer();
         final CodeClassLoader codeClassloader = initCodeClassloader(blobs);
         final MethodHandle main = mainMethod(codeClassloader);
-        inializeKeycloak(codeClassloader, main);
+        inializeKeycloakInstance(codeClassloader, main);
     }
 
     @Test
@@ -166,7 +172,7 @@ public class AuthFromKeycloakTest {
         return publicLookup.findStatic(cls, "main", mt);
     }
 
-    private static void inializeKeycloak(CodeClassLoader codeClassloader, final MethodHandle main) throws Throwable {
+    private static void inializeKeycloakInstance(CodeClassLoader codeClassloader, final MethodHandle main) throws Throwable {
         ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(codeClassloader);

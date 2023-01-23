@@ -4,8 +4,8 @@ import com.amihaiemil.eoyaml.Yaml;
 import com.artipie.asto.test.TestResource;
 import com.artipie.settings.YamlSettings;
 import com.artipie.settings.users.Users;
-import com.artipie.tools.Blob;
-import com.artipie.tools.BlobClassLoader;
+import com.artipie.tools.CodeBlob;
+import com.artipie.tools.CodeClassLoader;
 import com.artipie.tools.CompilerTool;
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
@@ -35,6 +35,9 @@ import org.testcontainers.utility.DockerImageName;
  */
 @Testcontainers
 public class AuthFromKeycloakTest {
+    /**
+     * Keycloak container.
+     */
     @Container
     private static GenericContainer<?> keycloak = new GenericContainer<>(
         DockerImageName.parse("quay.io/keycloak/keycloak:latest")
@@ -43,10 +46,15 @@ public class AuthFromKeycloakTest {
         .withEnv("KEYCLOAK_ADMIN_PASSWORD", "admin")
         .withExposedPorts(8080)
         .withCommand("start-dev");
+
     private static Set<Path> jars;
+
     private static Set<Path> sources;
-    private static BlobClassLoader blobClassloader;
-    private static List<Blob> blobs;
+
+    private static CodeClassLoader blobClassloader;
+
+    private static List<CodeBlob> blobs;
+
     private static MethodHandle main;
 
     @BeforeAll
@@ -129,7 +137,7 @@ public class AuthFromKeycloakTest {
                 throw new RuntimeException(e);
             }
         }).toList().toArray(new URL[0]), null);
-        blobClassloader = new BlobClassLoader(urlclassloader);
+        blobClassloader = new CodeClassLoader(urlclassloader);
         blobClassloader.addBlobs(blobs);
         Class<?> cls = Class.forName("keycloak.KeycloakDockerInitializer", true, blobClassloader);
         MethodHandles.Lookup publicLookup = MethodHandles.publicLookup();

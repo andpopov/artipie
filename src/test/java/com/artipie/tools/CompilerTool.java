@@ -2,6 +2,7 @@ package com.artipie.tools;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -30,12 +31,12 @@ public class CompilerTool {
     /**
      * Classpath for compilation.
      */
-    private final List<File> classpath = new ArrayList<>();
+    private final List<URL> classpath = new ArrayList<>();
 
     /**
      * Sources for compilation.
      */
-    private final List<File> sources = new ArrayList<>();
+    private final List<URL> sources = new ArrayList<>();
 
     /**
      * Diagnostic listener.
@@ -54,51 +55,19 @@ public class CompilerTool {
     }
 
     /**
-     * Add classpath.
-     * @param paths Paths of classpath.
+     * Add list of URLs to compilation classpath.
+     * @param urls List of URLs.
      */
-    public void addClasspaths(final Path... paths) {
-        this.addClasspaths(Arrays.stream(paths).map(Path::toFile).toList());
+    public void addClasspaths(final List<URL> urls) {
+        this.classpath.addAll(urls);
     }
 
     /**
-     * Add classpath.
-     * @param files Files of classpath.
+     * Add list of java source URLs for compilation.
+     * @param urls List of URLs.
      */
-    public void addClasspaths(final File... files) {
-        this.addClasspaths(List.of(files));
-    }
-
-    /**
-     * Add classpath.
-     * @param files Files of classpath.
-     */
-    public void addClasspaths(final List<File> files) {
-        this.classpath.addAll(files);
-    }
-
-    /**
-     * Add java sources.
-     * @param paths Paths to java sources.
-     */
-    public void addSources(final Path... paths) {
-        this.addSources(Arrays.stream(paths).map(Path::toFile).toList());
-    }
-
-    /**
-     * Add java sources.
-     * @param files Files to java sources.
-     */
-    public void addSources(final File... files) {
-        this.addSources(List.of(files));
-    }
-
-    /**
-     * Add java sources.
-     * @param files Files to java sources.
-     */
-    public void addSources(final List<File> files) {
-        this.sources.addAll(files);
+    public void addSources(final List<URL> urls) {
+        this.sources.addAll(urls);
     }
 
     /**
@@ -129,8 +98,8 @@ public class CompilerTool {
             StandardJavaFileManager fm = compiler.getStandardFileManager(
                 this.diagnostic, Locale.ENGLISH, Charset.defaultCharset()
             );
-            fm.setLocation(StandardLocation.CLASS_PATH, this.classpath);
-            Iterable<? extends JavaFileObject> units = fm.getJavaFileObjectsFromFiles(this.sources);
+            fm.setLocation(StandardLocation.CLASS_PATH, urlsToFiles(this.classpath));
+            Iterable<? extends JavaFileObject> units = fm.getJavaFileObjectsFromFiles(urlsToFiles(this.sources));
             if (!compiler.getTask(null, fm, this.diagnostic, options, null, units).call()) {
                 fm.close();
                 throw new AssertionError("compilation failed");
@@ -165,5 +134,14 @@ public class CompilerTool {
             }
         });
         return blobs;
+    }
+
+    /**
+     * Converts list of URL to List of File.
+     * @param urls List of URL.
+     * @return List of File.
+     */
+    private static List<File> urlsToFiles(final List<URL> urls) {
+        return urls.stream().map(FileUtils::toFile).toList();
     }
 }

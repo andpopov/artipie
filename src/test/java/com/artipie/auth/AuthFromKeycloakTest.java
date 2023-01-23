@@ -12,6 +12,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.FileVisitResult;
@@ -47,9 +48,9 @@ public class AuthFromKeycloakTest {
         .withExposedPorts(8080)
         .withCommand("start-dev");
 
-    private static Set<Path> jars;
+    private static Set<URL> jars;
 
-    private static Set<Path> sources;
+    private static Set<URL> sources;
 
     private static CodeClassLoader blobClassloader;
 
@@ -123,8 +124,8 @@ public class AuthFromKeycloakTest {
 
     private static void compileKeycloakInitializer() throws Throwable {
         final CompilerTool compiler = new CompilerTool();
-        compiler.addClasspaths(jars.stream().map(Path::toFile).toList());
-        compiler.addSources(sources.stream().map(Path::toFile).toList());
+        compiler.addClasspaths(jars.stream().toList());
+        compiler.addSources(sources.stream().toList());
         compiler.compile();
         blobs = compiler.blobs();
     }
@@ -132,9 +133,9 @@ public class AuthFromKeycloakTest {
     private static void initBlobClassloader() throws Throwable {
         final URLClassLoader urlclassloader = new URLClassLoader(jars.stream().map(file -> {
             try {
-                return file.toFile().toURI().toURL();
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
+                return file.toURI().toURL();
+            } catch (MalformedURLException | URISyntaxException exc) {
+                throw new RuntimeException(exc);
             }
         }).toList().toArray(new URL[0]), null);
         blobClassloader = new CodeClassLoader(urlclassloader);
@@ -149,20 +150,22 @@ public class AuthFromKeycloakTest {
         ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(blobClassloader);
-            main.invoke(new String[]{String.format("http://localhost:%s", keycloak.getMappedPort(8080))});
+            main.invoke(
+                new String[]{String.format("http://localhost:%s", keycloak.getMappedPort(8080))}
+            );
         } finally {
             Thread.currentThread().setContextClassLoader(originalClassLoader);
         }
     }
 
-    private static Set<Path> paths(final Path dir, final String ext) throws IOException {
-        Set<Path> files = new HashSet<>();
+    private static Set<URL> paths(final Path dir, final String ext) throws IOException {
+        Set<URL> files = new HashSet<>();
         Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
             @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws MalformedURLException {
                 if (!Files.isDirectory(file)) {
                     if (ext == null || file.toString().endsWith(ext)) {
-                        files.add(file);
+                        files.add(file.toFile().toURI().toURL());
                     }
                 }
                 return FileVisitResult.CONTINUE;

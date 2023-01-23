@@ -15,7 +15,7 @@ public class CodeBlob {
     /**
      * Byte code of class.
      */
-    private final byte[] bytes;
+    private final byte[] blob;
 
     /**
      * Ctor.
@@ -24,7 +24,7 @@ public class CodeBlob {
      */
     public CodeBlob(final String classname, final byte[] bytes) {
         this.classname = classname;
-        this.bytes = bytes;
+        this.blob = bytes;
     }
 
     /**
@@ -39,8 +39,8 @@ public class CodeBlob {
      * Byte code of class.
      * @return Byte code.
      */
-    public byte[] bytes() {
-        return bytes;
+    public byte[] blob() {
+        return blob;
     }
 
     @Override

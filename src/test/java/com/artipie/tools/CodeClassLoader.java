@@ -47,7 +47,7 @@ public class CodeClassLoader extends ClassLoader {
     @Override
     public Class<?> findClass(String name) throws ClassNotFoundException {
         if (this.blobs.containsKey(name)) {
-            final byte[] code = this.blobs.get(name).bytes();
+            final byte[] code = this.blobs.get(name).blob();
             return defineClass(name, code, 0, code.length);
         } else {
             return super.findClass(name);

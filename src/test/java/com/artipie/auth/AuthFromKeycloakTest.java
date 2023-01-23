@@ -2,6 +2,7 @@ package com.artipie.auth;
 
 import com.amihaiemil.eoyaml.Yaml;
 import com.artipie.asto.test.TestResource;
+import com.artipie.http.auth.Authentication;
 import com.artipie.settings.YamlSettings;
 import com.artipie.settings.users.Users;
 import com.artipie.tools.CodeBlob;
@@ -24,6 +25,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import org.awaitility.Awaitility;
+import org.eclipse.jetty.http.HttpStatus;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.collection.IsIn;
+import org.hamcrest.core.Is;
+import org.hamcrest.core.IsEqual;
+import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
@@ -89,19 +99,36 @@ public class AuthFromKeycloakTest {
     }
 
     @Test
+    /**
+     * Authenticates user by using keycloak authentication.
+     */
     void docker() {
-        final String user = "user1";
-        final String pass = "password";
+        final String login = "user1";
+        final String password = "password";
         final YamlSettings settings = AuthFromKeycloakTest.settings(
                 AuthFromKeycloakTest.keycloakUrl(),
                 "test_realm",
                 "test_client",
                 "secret"
         );
+        final AtomicReference<Authentication.User> ref = new AtomicReference<>();
         settings
-                .credentials()
-                .thenCompose(Users::auth)
-                .thenApply(auth -> auth.user(user, pass));
+            .credentials()
+            .thenCompose(Users::auth)
+            .thenAccept(auth -> ref.set(auth.user(login, password).get()));
+        Awaitility.waitAtMost(3_000, TimeUnit.MILLISECONDS)
+            .until(() -> ref.get() != null);
+        MatcherAssert.assertThat(
+            ref.get(),
+            Is.is(IsNull.notNullValue())
+        );
+        final Authentication.User user = ref.get();
+        MatcherAssert.assertThat(
+            user.name(),
+            Is.is(login)
+        );
+        MatcherAssert.assertThat(user.groups().contains("role_realm"), new IsEqual<>(true));
+        MatcherAssert.assertThat(user.groups().contains("client_role"), new IsEqual<>(true));
     }
 
     /**

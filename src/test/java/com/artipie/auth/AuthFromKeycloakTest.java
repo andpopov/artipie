@@ -52,11 +52,11 @@ public class AuthFromKeycloakTest {
     private final static String KEYCLOAK_ADMIN_PASSWORD = KEYCLOAK_ADMIN_LOGIN;
 
     /**
-     * Keycloak container.
+     * Keycloak docker container.
      */
     @Container
     private static GenericContainer<?> keycloak = new GenericContainer<>(
-        DockerImageName.parse("quay.io/keycloak/keycloak:latest")
+        DockerImageName.parse("quay.io/keycloak/keycloak:20.0.1")
     )
         .withEnv("KEYCLOAK_ADMIN", KEYCLOAK_ADMIN_LOGIN)
         .withEnv("KEYCLOAK_ADMIN_PASSWORD", KEYCLOAK_ADMIN_PASSWORD)

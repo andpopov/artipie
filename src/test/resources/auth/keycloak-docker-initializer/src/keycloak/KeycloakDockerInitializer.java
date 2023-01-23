@@ -13,38 +13,99 @@ import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
+/**
+ * Keycloak docker initializer.
+ * Initializes docker image: quay.io/keycloak/keycloak:20.0.1
+ * As follows:
+ * 1. Creates new realm
+ * 2. Creates new role
+ * 3. Creates new client application
+ * 4. Creates new client's application role.
+ * 5. Creates new user with realm role and client application role.
+ */
 public class KeycloakDockerInitializer {
-    private final static String KEYCLOAK_HOST = "http://localhost:8080";
+    /**
+     * Keycloak url.
+     */
+    private final static String KEYCLOAK_URL = "http://localhost:8080";
+
+    /**
+     * Keycloak admin login.
+     */
+    private final static String KEYCLOAK_ADMIN_LOGIN = "admin";
+
+    /**
+     * Keycloak admin password.
+     */
+    private final static String KEYCLOAK_ADMIN_PASSWORD = KEYCLOAK_ADMIN_LOGIN;
+
+    /**
+     * Realm name.
+     */
     private final static String REALM = "test_realm";
+
+    /**
+     * Realm role name.
+     */
     private final static String REALM_ROLE = "role_realm";
+
+    /**
+     * Client role.
+     */
     private final static String CLIENT_ROLE = "client_role";
+
+    /**
+     * Client application id.
+     */
     private final static String CLIENT_ID = "test_client";
-    private final static String CLIENT_SECRET = "secret";
+
+    /**
+     * Client application password.
+     */
+    private final static String CLIENT_PASSWORD = "secret";
+
+    /**
+     * Test user id.
+     */
     private final static String USER_ID = "user1";
+
+    /**
+     * Test user password.
+     */
     private final static String USER_PASSWORD = "password";
 
+    /**
+     * Keycloak server url.
+     */
+    private final String url;
+
+    /**
+     * Start point of application.
+     * @param args Arguments, can contains keycloak server url
+     */
     public static void main(String[] args) {
-        final String host;
+        final String url;
         if (!Objects.isNull(args) && args.length > 0) {
-            host = args[0];
+            url = args[0];
         } else {
-            host = KEYCLOAK_HOST;
+            url = KEYCLOAK_URL;
         }
-        new KeycloakDockerInitializer(host).init();
+        new KeycloakDockerInitializer(url).init();
     }
 
-    private final String host;
-
-    public KeycloakDockerInitializer(final String host) {
-        this.host = host;
+    public KeycloakDockerInitializer(final String url) {
+        this.url = url;
     }
 
+    /**
+     * Using admin connection to keycloak server initializes keycloak instance.
+     */
     public void init() {
         Keycloak keycloak = Keycloak.getInstance(
-            host,
+            url,
             "master",
-            "admin",
-            "admin",
+            KEYCLOAK_ADMIN_LOGIN,
+            KEYCLOAK_ADMIN_PASSWORD,
             "admin-cli");
         createRealm(keycloak);
         createRealmRole(keycloak);
@@ -53,6 +114,10 @@ public class KeycloakDockerInitializer {
         createUserNew(keycloak);
     }
 
+    /**
+     * Creates new realm 'test_realm'.
+     * @param keycloak Keycloak instance.
+     */
     private void createRealm(final Keycloak keycloak) {
         RealmRepresentation realm = new RealmRepresentation();
         realm.setRealm(REALM);
@@ -60,10 +125,18 @@ public class KeycloakDockerInitializer {
         keycloak.realms().create(realm);
     }
 
+    /**
+     * Creates new role 'role_realm' in realm 'test_realm'
+     * @param keycloak Keycloak instance.
+     */
     private void createRealmRole(final Keycloak keycloak) {
         keycloak.realm(REALM).roles().create(new RoleRepresentation(REALM_ROLE, null, false));
     }
 
+    /**
+     * Creates new client application with ID 'test_client' and password 'secret'.
+     * @param keycloak Keycloak instance.
+     */
     private void createClient(final Keycloak keycloak) {
         ClientRepresentation client = new ClientRepresentation();
         client.setEnabled(true);
@@ -72,12 +145,16 @@ public class KeycloakDockerInitializer {
         client.setStandardFlowEnabled(false);
         client.setClientId(CLIENT_ID);
         client.setProtocol("openid-connect");
-        client.setSecret(CLIENT_SECRET);
+        client.setSecret(CLIENT_PASSWORD);
         client.setAuthorizationServicesEnabled(true);
         client.setServiceAccountsEnabled(true);
         keycloak.realm(REALM).clients().create(client);
     }
 
+    /**
+     * Creates new client's application role 'client_role' for client application.
+     * @param keycloak Keycloak instance.
+     */
     private void createClientRole(final Keycloak keycloak) {
         RoleRepresentation clientRoleRepresentation = new RoleRepresentation();
         clientRoleRepresentation.setName(CLIENT_ROLE);
@@ -94,6 +171,10 @@ public class KeycloakDockerInitializer {
             );
     }
 
+    /**
+     * Creates new user with realm role and client application role.
+     * @param keycloak
+     */
     private void createUserNew(final Keycloak keycloak) {
         // Define user
         UserRepresentation user = new UserRepresentation();

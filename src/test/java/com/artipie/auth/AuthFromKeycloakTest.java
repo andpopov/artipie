@@ -37,41 +37,57 @@ import org.testcontainers.utility.DockerImageName;
 @Testcontainers
 public class AuthFromKeycloakTest {
     /**
+     * Keycloak port.
+     */
+    private final static int KEYCLOAK_PORT = 8080;
+
+    /**
+     * Keycloak admin login.
+     */
+    private final static String KEYCLOAK_ADMIN_LOGIN = "admin";
+
+    /**
+     * Keycloak admin password.
+     */
+    private final static String KEYCLOAK_ADMIN_PASSWORD = KEYCLOAK_ADMIN_LOGIN;
+
+    /**
      * Keycloak container.
      */
     @Container
     private static GenericContainer<?> keycloak = new GenericContainer<>(
         DockerImageName.parse("quay.io/keycloak/keycloak:latest")
     )
-        .withEnv("KEYCLOAK_ADMIN", "admin")
-        .withEnv("KEYCLOAK_ADMIN_PASSWORD", "admin")
-        .withExposedPorts(8080)
+        .withEnv("KEYCLOAK_ADMIN", KEYCLOAK_ADMIN_LOGIN)
+        .withEnv("KEYCLOAK_ADMIN_PASSWORD", KEYCLOAK_ADMIN_PASSWORD)
+        .withExposedPorts(KEYCLOAK_PORT)
         .withCommand("start-dev");
 
+    /**
+     * Jars of classpath used for compilation java sources and loading of compiled classes.
+     */
     private static Set<URL> jars;
 
+    /**
+     * Sources of java-code for compilation.
+     */
     private static Set<URL> sources;
-
-    private static CodeClassLoader blobClassloader;
-
-    private static List<CodeBlob> blobs;
-
-    private static MethodHandle main;
 
     @BeforeAll
     static void init() throws Throwable {
         prepareJarsAndSources();
-        compileKeycloakInitializer();
-        initBlobClassloader();
-        inializeKeycloak();
+        final List<CodeBlob> blobs = compileKeycloakInitializer();
+        final CodeClassLoader codeClassloader = initCodeClassloader(blobs);
+        final MethodHandle main = mainMethod(codeClassloader);
+        inializeKeycloak(codeClassloader, main);
     }
 
     @Test
-    void docker() throws IOException {
+    void docker() {
         final String user = "user1";
         final String pass = "password";
         final YamlSettings settings = AuthFromKeycloakTest.settings(
-                String.format("http://localhost:%s", keycloak.getMappedPort(8080)),
+                keycloakUrl(),
                 "test_realm",
                 "test_client",
                 "secret"
@@ -90,7 +106,7 @@ public class AuthFromKeycloakTest {
      * @param clientPassword Keycloak client application password
      * @checkstyle ParameterNumberCheck (3 lines)
      */
-    private static YamlSettings settings(final String url, final String realm, final String clientId, final String clientPassword) throws IOException {
+    private static YamlSettings settings(final String url, final String realm, final String clientId, final String clientPassword) {
         return new YamlSettings(
                 Yaml.createYamlMappingBuilder().add(
                         "meta",
@@ -122,15 +138,15 @@ public class AuthFromKeycloakTest {
         );
     }
 
-    private static void compileKeycloakInitializer() throws Throwable {
+    private static List<CodeBlob> compileKeycloakInitializer() throws Throwable {
         final CompilerTool compiler = new CompilerTool();
         compiler.addClasspaths(jars.stream().toList());
         compiler.addSources(sources.stream().toList());
         compiler.compile();
-        blobs = compiler.blobs();
+        return compiler.blobs();
     }
 
-    private static void initBlobClassloader() throws Throwable {
+    private static CodeClassLoader initCodeClassloader(final List<CodeBlob> blobs) {
         final URLClassLoader urlclassloader = new URLClassLoader(jars.stream().map(file -> {
             try {
                 return file.toURI().toURL();
@@ -138,20 +154,24 @@ public class AuthFromKeycloakTest {
                 throw new RuntimeException(exc);
             }
         }).toList().toArray(new URL[0]), null);
-        blobClassloader = new CodeClassLoader(urlclassloader);
-        blobClassloader.addBlobs(blobs);
-        Class<?> cls = Class.forName("keycloak.KeycloakDockerInitializer", true, blobClassloader);
-        MethodHandles.Lookup publicLookup = MethodHandles.publicLookup();
-        MethodType mt = MethodType.methodType(void.class, String[].class);
-        main = publicLookup.findStatic(cls, "main", mt);
+        CodeClassLoader codeClassloader = new CodeClassLoader(urlclassloader);
+        codeClassloader.addBlobs(blobs);
+        return codeClassloader;
     }
 
-    private static void inializeKeycloak() throws Throwable {
+    private static MethodHandle mainMethod(final CodeClassLoader codeClassloader) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException {
+        Class<?> cls = Class.forName("keycloak.KeycloakDockerInitializer", true, codeClassloader);
+        MethodHandles.Lookup publicLookup = MethodHandles.publicLookup();
+        MethodType mt = MethodType.methodType(void.class, String[].class);
+        return publicLookup.findStatic(cls, "main", mt);
+    }
+
+    private static void inializeKeycloak(CodeClassLoader codeClassloader, final MethodHandle main) throws Throwable {
         ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
         try {
-            Thread.currentThread().setContextClassLoader(blobClassloader);
+            Thread.currentThread().setContextClassLoader(codeClassloader);
             main.invoke(
-                new String[]{String.format("http://localhost:%s", keycloak.getMappedPort(8080))}
+                new String[]{keycloakUrl()}
             );
         } finally {
             Thread.currentThread().setContextClassLoader(originalClassLoader);
@@ -172,5 +192,9 @@ public class AuthFromKeycloakTest {
             }
         });
         return files;
+    }
+
+    private static String keycloakUrl() {
+        return String.format("http://localhost:%s", keycloak.getMappedPort(KEYCLOAK_PORT));
     }
 }

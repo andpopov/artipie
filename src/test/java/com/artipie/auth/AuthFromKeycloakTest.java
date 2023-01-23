@@ -28,9 +28,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.awaitility.Awaitility;
-import org.eclipse.jetty.http.HttpStatus;
 import org.hamcrest.MatcherAssert;
-import org.hamcrest.collection.IsIn;
 import org.hamcrest.core.Is;
 import org.hamcrest.core.IsEqual;
 import org.hamcrest.core.IsNull;
@@ -102,7 +100,7 @@ public class AuthFromKeycloakTest {
     /**
      * Authenticates user by using keycloak authentication.
      */
-    void docker() {
+    void authenticateUserByKeycloakReturningExpectedUserWithRealmAndClientRoles() {
         final String login = "user1";
         final String password = "password";
         final YamlSettings settings = AuthFromKeycloakTest.settings(

@@ -38,16 +38,33 @@ public final class AuthFromKeycloak implements Authentication {
         try {
             AuthorizationResponse response = authzClient.authorization(username, password, "openid").authorize(request);
             AccessToken token = TokenVerifier.create(response.getToken(), AccessToken.class).getToken();
-            final Set<String> roles = new HashSet<>(token.getRealmAccess().getRoles());
-            token.getResourceAccess().forEach((k, v) -> roles.addAll(v.getRoles()));
-            System.out.println(username);
-            System.out.println(roles);
+            final Set<String> roles = new HashSet<>();
+            roles.addAll(realmRoles(token));
+            roles.addAll(clientRoles(token));
             return Optional.of(new User(username, roles));
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (VerificationException e) {
-            throw new RuntimeException(e);
+        } catch (VerificationException exc) {
+            throw new RuntimeException(exc);
         }
+    }
+
+    /**
+     * Retrieves realm roles.
+     * @param token {@link AccessToken}
+     * @return Realm roles.
+     */
+    private Set<String> realmRoles(final AccessToken token) {
+        return token.getRealmAccess().getRoles();
+    }
+
+    /**
+     * Retrieves client application roles.
+     * @param token {@link AccessToken}
+     * @return Client application roles.
+     */
+    private Set<String> clientRoles(final AccessToken token) {
+        final Set<String> roles = new HashSet<>();
+        token.getResourceAccess().forEach((k, v) -> roles.addAll(v.getRoles()));
+        return roles;
     }
 
     @Override

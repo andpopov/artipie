@@ -85,7 +85,7 @@ public class AuthFromKeycloakTest {
         final List<CodeBlob> blobs = compileKeycloakInitializer();
         final CodeClassLoader codeClassloader = initCodeClassloader(blobs);
         final MethodHandle main = mainMethod(codeClassloader);
-        inializeKeycloakInstance(codeClassloader, main);
+        initializeKeycloakInstance(codeClassloader, main);
     }
 
     @Test
@@ -134,16 +134,25 @@ public class AuthFromKeycloakTest {
         );
     }
 
+    /**
+     * Loads dependencies from jar-files and java-sources for compilation.
+     * @throws Throwable Exception.
+     */
     private static void prepareJarsAndSources() throws Throwable {
         final String resources = "auth/keycloak-docker-initializer";
-        jars = paths(
+        jars = files(
             new TestResource(String.format("%s/lib", resources)).asPath(), ".jar"
         );
-        sources = paths(
+        sources = files(
             new TestResource(String.format("%s/src", resources)).asPath(), ".java"
         );
     }
 
+    /**
+     * Compiles 'keycloak.KeycloakDockerInitializer' class from sources.
+     * @return List of compiled classes as CodeBlobs.
+     * @throws Throwable Exception.
+     */
     private static List<CodeBlob> compileKeycloakInitializer() throws Throwable {
         final CompilerTool compiler = new CompilerTool();
         compiler.addClasspaths(jars.stream().toList());
@@ -152,6 +161,11 @@ public class AuthFromKeycloakTest {
         return compiler.blobs();
     }
 
+    /**
+     * Create instance of CodeClassLoader.
+     * @param blobs Code blobs.
+     * @return CodeClassLoader
+     */
     private static CodeClassLoader initCodeClassloader(final List<CodeBlob> blobs) {
         final URLClassLoader urlclassloader = new URLClassLoader(jars.stream().map(file -> {
             try {
@@ -165,14 +179,34 @@ public class AuthFromKeycloakTest {
         return codeClassloader;
     }
 
-    private static MethodHandle mainMethod(final CodeClassLoader codeClassloader) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException {
+    /**
+     * Lookups 'public static void main(String[] args)' method
+     * of 'keycloak.KeycloakDockerInitializer' class.
+     * @param codeClassloader CodeClassLoader
+     * @return 'public static void main(String[] args)' method
+     * of 'keycloak.KeycloakDockerInitializer' class
+     * @throws ClassNotFoundException Exception.
+     * @throws NoSuchMethodException Exception.
+     * @throws IllegalAccessException Exception.
+     */
+    private static MethodHandle mainMethod(final CodeClassLoader codeClassloader)
+        throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException {
         Class<?> cls = Class.forName("keycloak.KeycloakDockerInitializer", true, codeClassloader);
         MethodHandles.Lookup publicLookup = MethodHandles.publicLookup();
         MethodType mt = MethodType.methodType(void.class, String[].class);
         return publicLookup.findStatic(cls, "main", mt);
     }
 
-    private static void inializeKeycloakInstance(CodeClassLoader codeClassloader, final MethodHandle main) throws Throwable {
+    /**
+     * Starts 'keycloak.KeycloakDockerInitializer' class by passing url of keycloak server
+     * in first argument of 'main'-method.
+     * CodeClassLoader is used as context class loader.
+     * @param codeClassloader CodeClassLoader.
+     * @param main Main-method.
+     * @throws Throwable Exception.
+     */
+    private static void initializeKeycloakInstance(CodeClassLoader codeClassloader,
+        final MethodHandle main) throws Throwable {
         ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(codeClassloader);
@@ -184,11 +218,19 @@ public class AuthFromKeycloakTest {
         }
     }
 
-    private static Set<URL> paths(final Path dir, final String ext) throws IOException {
+    /**
+     * Lookup files in directory by specified extension.
+     * @param dir Directory for listing.
+     * @param ext Extension of files, example '.jar'
+     * @return URLs of files.
+     * @throws IOException
+     */
+    private static Set<URL> files(final Path dir, final String ext) throws IOException {
         Set<URL> files = new HashSet<>();
         Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
             @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws MalformedURLException {
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                throws MalformedURLException {
                 if (!Files.isDirectory(file)) {
                     if (ext == null || file.toString().endsWith(ext)) {
                         files.add(file.toFile().toURI().toURL());
@@ -200,6 +242,10 @@ public class AuthFromKeycloakTest {
         return files;
     }
 
+    /**
+     * Keycloak server url loaded by docker container.
+     * @return Keycloak server url.
+     */
     private static String keycloakUrl() {
         return String.format("http://localhost:%s", keycloak.getMappedPort(KEYCLOAK_PORT));
     }

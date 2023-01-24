@@ -93,7 +93,7 @@ public class CompilerTool {
      * Compiled code blobs.
      * @return Code blobs.
      */
-    public List<CodeBlob> blobs() {
+    public List<CodeBlob> classesToCodeBlobs() {
         return this.blobs;
     }
 
@@ -118,7 +118,7 @@ public class CompilerTool {
                 throw new AssertionError("compilation failed");
             }
             manager.close();
-            this.blobs.addAll(blobs(output));
+            this.blobs.addAll(classesToCodeBlobs(output));
         } finally {
             FileUtils.deleteDirectory(output.toFile());
         }
@@ -130,7 +130,7 @@ public class CompilerTool {
      * @return Set of code blobs.
      * @throws IOException Exception
      */
-    private static Set<CodeBlob> blobs(final Path dir) throws IOException {
+    private static Set<CodeBlob> classesToCodeBlobs(final Path dir) throws IOException {
         final Set<CodeBlob> blobs = new HashSet<>();
         Files.walkFileTree(
             dir,

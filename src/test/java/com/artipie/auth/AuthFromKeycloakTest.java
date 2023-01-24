@@ -187,7 +187,7 @@ public class AuthFromKeycloakTest {
         compiler.addClasspaths(jars.stream().toList());
         compiler.addSources(sources.stream().toList());
         compiler.compile();
-        return compiler.blobs();
+        return compiler.classesToCodeBlobs();
     }
 
     /**

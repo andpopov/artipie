@@ -112,7 +112,7 @@ public class AuthFromKeycloakTest {
     /**
      * Authenticates user by using keycloak authentication.
      */
-    void authenticateUserByKeycloakReturningExpectedUserWithRealmAndClientRoles() {
+    void authenticateExistingUserReturnsUserWithRealmAndClientRoles() {
         final String login = "user1";
         final String password = "password";
         final YamlSettings settings = AuthFromKeycloakTest.settings(
@@ -140,6 +140,39 @@ public class AuthFromKeycloakTest {
         );
         MatcherAssert.assertThat(user.groups().contains("role_realm"), new IsEqual<>(true));
         MatcherAssert.assertThat(user.groups().contains("client_role"), new IsEqual<>(true));
+    }
+
+    @Test
+    /**
+     * Authenticates no existing user by using keycloak authentication.
+     */
+    void authenticateNoExistingUser() {
+        final String login = "fake";
+        final String password = "fake";
+        final YamlSettings settings = AuthFromKeycloakTest.settings(
+            AuthFromKeycloakTest.keycloakUrl(),
+            "test_realm",
+            "test_client",
+            "secret"
+        );
+        final AtomicReference<Throwable> ref = new AtomicReference<>();
+        settings
+            .credentials()
+            .thenCompose(Users::auth)
+            .thenAccept(auth -> auth.user(login, password))
+            .exceptionally(
+                exc -> {
+                    ref.set(exc);
+                    return null;
+                }
+            );
+        // @checkstyle MagicNumberCheck (1 line)
+        Awaitility.waitAtMost(3_000, TimeUnit.MILLISECONDS)
+            .until(() -> ref.get() != null);
+        MatcherAssert.assertThat(
+            ref.get().getMessage().contains("Failed to obtain authorization data"),
+            Is.is(true)
+        );
     }
 
     /**

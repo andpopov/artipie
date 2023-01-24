@@ -7,27 +7,34 @@ package com.artipie.settings.users;
 import com.amihaiemil.eoyaml.YamlMapping;
 import com.artipie.auth.AuthFromKeycloak;
 import com.artipie.http.auth.Authentication;
-import org.keycloak.authorization.client.Configuration;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import org.keycloak.authorization.client.Configuration;
 
 /**
  * Credentials from keycloak.
+ *
  * @since 0.28.0
  */
 public final class UsersFromKeycloak implements Users {
-    private final Configuration configuration;
+    /**
+     * Configuration.
+     */
+    private final Configuration config;
 
-    public UsersFromKeycloak(YamlMapping settings) {
-        this.configuration = new Configuration(
-                settings.string("url"),
-                settings.string("realm"),
-                settings.string("client-id"),
-                Map.of("secret", settings.string("client-password")),
-                null
+    /**
+     * Ctor.
+     * @param settings Yaml configuration for keycloak.
+     */
+    public UsersFromKeycloak(final YamlMapping settings) {
+        this.config = new Configuration(
+            settings.string("url"),
+            settings.string("realm"),
+            settings.string("client-id"),
+            Map.of("secret", settings.string("client-password")),
+            null
         );
     }
 
@@ -55,6 +62,6 @@ public final class UsersFromKeycloak implements Users {
 
     @Override
     public CompletionStage<Authentication> auth() {
-        return CompletableFuture.completedFuture(new AuthFromKeycloak(configuration));
+        return CompletableFuture.completedFuture(new AuthFromKeycloak(this.config));
     }
 }

@@ -48,7 +48,7 @@ public final class AuthFromKeycloak implements Authentication {
             final Set<String> roles = new HashSet<>();
             roles.addAll(AuthFromKeycloak.realmRoles(token));
             roles.addAll(AuthFromKeycloak.clientRoles(token));
-            return Optional.of(new User(username, roles));
+            return Optional.of(new User(username, roles.stream().toList()));
         } catch (final VerificationException exc) {
             throw new ArtipieException(exc);
         }

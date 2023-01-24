@@ -1,3 +1,7 @@
+/*
+ * The MIT License (MIT) Copyright (c) 2020-2021 artipie.com
+ * https://github.com/artipie/artipie/LICENSE.txt
+ */
 package com.artipie.tools;
 
 import java.io.File;
@@ -25,33 +29,40 @@ import javax.tools.ToolProvider;
 import org.apache.commons.io.FileUtils;
 
 /**
- * Dynamically compiles java-sources.
+ * Compiles java-sources.
+ * @since 0.28
  */
 public class CompilerTool {
     /**
      * Classpath for compilation.
      */
-    private final List<URL> classpath = new ArrayList<>();
+    private final List<URL> classpath;
 
     /**
      * Sources for compilation.
      */
-    private final List<URL> sources = new ArrayList<>();
+    private final List<URL> sources;
 
     /**
      * Diagnostic listener.
      */
-    private DiagnosticListener<JavaFileObject> diagnostic = new DiagnosticCollector<JavaFileObject>();
+    @SuppressWarnings("PMD.AvoidFieldNameMatchingMethodName")
+    private final DiagnosticListener<JavaFileObject> diagnostic;
 
     /**
      * Code blobs of compiled classes.
      */
-    private final List<CodeBlob> blobs = new ArrayList<>();
+    @SuppressWarnings("PMD.AvoidFieldNameMatchingMethodName")
+    private final List<CodeBlob> blobs;
 
     /**
      * Ctor.
      */
     public CompilerTool() {
+        this.classpath = new ArrayList<>(0);
+        this.sources = new ArrayList<>(0);
+        this.blobs = new ArrayList<>(0);
+        this.diagnostic = new DiagnosticCollector<>();
     }
 
     /**
@@ -92,19 +103,21 @@ public class CompilerTool {
      */
     public void compile() throws IOException {
         final Path output = Files.createTempDirectory("compiled");
-        Iterable<String> options = Arrays.asList("-d", output.toString());
+        final Iterable<String> options = Arrays.asList("-d", output.toString());
         try {
-            JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-            StandardJavaFileManager fm = compiler.getStandardFileManager(
+            final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+            final StandardJavaFileManager manager = compiler.getStandardFileManager(
                 this.diagnostic, Locale.ENGLISH, Charset.defaultCharset()
             );
-            fm.setLocation(StandardLocation.CLASS_PATH, urlsToFiles(this.classpath));
-            Iterable<? extends JavaFileObject> units = fm.getJavaFileObjectsFromFiles(urlsToFiles(this.sources));
-            if (!compiler.getTask(null, fm, this.diagnostic, options, null, units).call()) {
-                fm.close();
+            manager.setLocation(StandardLocation.CLASS_PATH, urlsToFiles(this.classpath));
+            final Iterable<? extends JavaFileObject> units = manager.getJavaFileObjectsFromFiles(
+                urlsToFiles(this.sources)
+            );
+            if (!compiler.getTask(null, manager, this.diagnostic, options, null, units).call()) {
+                manager.close();
                 throw new AssertionError("compilation failed");
             }
-            fm.close();
+            manager.close();
             this.blobs.addAll(blobs(output));
         } finally {
             FileUtils.deleteDirectory(output.toFile());
@@ -115,24 +128,26 @@ public class CompilerTool {
      * Loads result of compilation from directory to set of code blobs.
      * @param dir Directory stores result of compilation.
      * @return Set of code blobs.
-     * @throws IOException
+     * @throws IOException Exception
      */
     private static Set<CodeBlob> blobs(final Path dir) throws IOException {
-        Set<CodeBlob> blobs = new HashSet<>();
-        Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
-                if (!Files.isDirectory(path)) {
-                    if (path.toString().endsWith(".class")) {
+        final Set<CodeBlob> blobs = new HashSet<>();
+        Files.walkFileTree(
+            dir,
+            new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(final Path path, final BasicFileAttributes attrs)
+                    throws IOException {
+                    if (!Files.isDirectory(path) && path.toString().endsWith(".class")) {
                         final String classname = dir.relativize(path).toString()
                             .replace(File.separatorChar, '.').replaceAll("\\.class$", "");
                         final byte[] bytes = Files.readAllBytes(path);
                         blobs.add(new CodeBlob(classname, bytes));
                     }
+                    return FileVisitResult.CONTINUE;
                 }
-                return FileVisitResult.CONTINUE;
             }
-        });
+        );
         return blobs;
     }
 

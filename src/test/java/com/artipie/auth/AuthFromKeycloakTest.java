@@ -69,6 +69,21 @@ public class AuthFromKeycloakTest {
     private static final String ADMIN_PASSWORD = AuthFromKeycloakTest.ADMIN_LOGIN;
 
     /**
+     * Keycloak realm.
+     */
+    private static final String REALM = "test_realm";
+
+    /**
+     * Keycloak client application id.
+     */
+    private static final String CLIENT_ID = "test_client";
+
+    /**
+     * Keycloak client application password.
+     */
+    private static final String CLIENT_PASSWORD = "secret";
+
+    /**
      * Keycloak docker container.
      */
     @Container
@@ -109,17 +124,14 @@ public class AuthFromKeycloakTest {
     }
 
     @Test
-    /**
-     * Authenticates user by using keycloak authentication.
-     */
     void authenticateExistingUserReturnsUserWithRealmAndClientRoles() {
         final String login = "user1";
         final String password = "password";
         final YamlSettings settings = AuthFromKeycloakTest.settings(
             AuthFromKeycloakTest.keycloakUrl(),
-            "test_realm",
-            "test_client",
-            "secret"
+            AuthFromKeycloakTest.REALM,
+            AuthFromKeycloakTest.CLIENT_ID,
+            AuthFromKeycloakTest.CLIENT_PASSWORD
         );
         final AtomicReference<Authentication.User> ref = new AtomicReference<>();
         settings
@@ -143,17 +155,14 @@ public class AuthFromKeycloakTest {
     }
 
     @Test
-    /**
-     * Authenticates no existing user by using keycloak authentication.
-     */
     void authenticateNoExistingUser() {
         final String login = "fake";
         final String password = "fake";
         final YamlSettings settings = AuthFromKeycloakTest.settings(
             AuthFromKeycloakTest.keycloakUrl(),
-            "test_realm",
-            "test_client",
-            "secret"
+            AuthFromKeycloakTest.REALM,
+            AuthFromKeycloakTest.CLIENT_ID,
+            AuthFromKeycloakTest.CLIENT_PASSWORD
         );
         final AtomicReference<Throwable> ref = new AtomicReference<>();
         settings

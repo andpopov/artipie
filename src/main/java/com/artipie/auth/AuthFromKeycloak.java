@@ -49,7 +49,7 @@ public final class AuthFromKeycloak implements Authentication {
             roles.addAll(AuthFromKeycloak.realmRoles(token));
             roles.addAll(AuthFromKeycloak.clientRoles(token));
             return Optional.of(new User(username, roles.stream().toList()));
-        } catch (final VerificationException | RuntimeException exc) {
+        } catch (final VerificationException exc) {
             throw new ArtipieException(exc);
         }
     }

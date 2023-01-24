@@ -156,8 +156,7 @@ public class AuthFromKeycloakTest {
 
     @Test
     void authenticateNoExistingUser() {
-        final String login = "fake";
-        final String password = "fake";
+        final String fake = "fake";
         final YamlSettings settings = AuthFromKeycloakTest.settings(
             AuthFromKeycloakTest.keycloakUrl(),
             AuthFromKeycloakTest.REALM,
@@ -168,7 +167,7 @@ public class AuthFromKeycloakTest {
         settings
             .credentials()
             .thenCompose(Users::auth)
-            .thenAccept(auth -> auth.user(login, password))
+            .thenAccept(auth -> auth.user(fake, fake))
             .exceptionally(
                 exc -> {
                     ref.set(exc);

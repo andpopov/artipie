@@ -4,7 +4,7 @@ LABEL description="Artipie binary repository management tool that includes all k
 LABEL maintainer="andpopov@gmail.com"
 
 USER 0:0
-# 'version' value should be the same as version of 'com.artipie:asto-core'
+# 'version' value should be the same as version of 'com.artipie:asto-core' in pom.xml
 RUN version="v1.15.1" && \
     mkdir -p /tmp/deps/lib && \
     cd /tmp/deps && \

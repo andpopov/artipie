@@ -450,6 +450,12 @@ SOFTWARE.
       <artifactId>jython-standalone</artifactId>
       <version>2.7.3</version>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/org.jruby/jruby -->
+    <dependency>
+      <groupId>org.jruby</groupId>
+      <artifactId>jruby</artifactId>
+      <version>9.4.2.0</version>
+    </dependency>
   </dependencies>
   <build>
     <testResources>

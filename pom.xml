@@ -445,6 +445,11 @@ SOFTWARE.
       <artifactId>groovy-jsr223</artifactId>
       <version>4.0.11</version>
     </dependency>
+    <dependency>
+      <groupId>org.python</groupId>
+      <artifactId>jython-standalone</artifactId>
+      <version>2.7.3</version>
+    </dependency>
   </dependencies>
   <build>
     <testResources>

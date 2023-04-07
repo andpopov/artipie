@@ -6,26 +6,15 @@ import javax.script.ScriptException;
 
 public class ScriptMain {
     public static void main(String[] args) throws ScriptException {
-        GroovyScript script = new GroovyScript();
-        script
-            .compile("println(1)")
-            .call();
-
-        script.call("println(2)");
-
-        script
-            .compile("println(a)")
-            .call(Map.of("a", 3));
-
-        script.call("println(a)", Map.of("a", 4));
-
+        GroovyScript.newScript("println(1)").call();
+        GroovyScript.newScript("println(a)").call(Map.of("a", 2));
         System.out.println(
-            script.call("return a*2", Map.of("a", 5))
+            GroovyScript.newScript("a * 2").call(Map.of("a", 3)).value()
         );
-
         final Map<String, Object> variables = new HashMap<>();
-        variables.put("a", 6);
-        script.call("a = a * 2", variables);
-        System.out.println(script.variable("a"));
+        variables.put("a", 4);
+        System.out.println(
+            GroovyScript.newScript("a = a * 3").call(variables).variable("a")
+        );
     }
 }

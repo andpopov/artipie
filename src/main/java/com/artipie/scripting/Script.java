@@ -1,5 +1,6 @@
 package com.artipie.scripting;
 
+import com.artipie.ArtipieException;
 import java.util.Map;
 import java.util.Objects;
 import javax.script.Compilable;
@@ -9,64 +10,106 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
+import javax.script.SimpleScriptContext;
 
-public class Script {
-    protected final ScriptEngine engine;
-    protected String script;
-    protected CompiledScript compiledScript;
+public interface Script {
+    ScriptEngineManager manager = new ScriptEngineManager();
 
-    public Script(final String name) {
-        this.engine = new ScriptEngineManager().getEngineByName(name);
+    Result call() throws ScriptException;
+
+    Result call(final Map<String, Object> vars) throws ScriptException;
+
+    static Script newScript(final String name, final String script) {
+        final ScriptEngine engine = manager.getEngineByName(name);
+        return new StandardScript(engine, script);
     }
 
-    public Script compile(final String script) throws ScriptException {
-        this.script = script;
-        if (this.engine instanceof Compilable) {
-            this.compiledScript = ((Compilable) this.engine).compile(script);
+    static Script newCompiledScript(final String name, final String script) {
+        final ScriptEngine engine = manager.getEngineByName(name);
+        return new PrecompiledScript(engine, script);
+    }
+
+    class StandardScript implements Script {
+        private final ScriptEngine engine;
+        private final String script;
+
+        public StandardScript(final ScriptEngine engine, final String script) {
+            this.engine = engine;
+            this.script = Objects.requireNonNull(script, "Script is null");
         }
-        return this;
-    }
 
-    public Object call(final Map<String, Object> vars) throws ScriptException {
-        Objects.requireNonNull(this.script, "Script is null");
-        final SimpleBindings bindings = new SimpleBindings(vars);
-        this.engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
-        final Object res;
-        if (this.engine instanceof Compilable && this.compiledScript != null) {
-            res = this.compiledScript.eval(bindings);
-        } else {
-            res = this.engine.eval(this.script);
+        @Override
+        public Result call() throws ScriptException {
+            final Result result = new Result();
+            result.value(this.engine.eval(this.script, result.context()));
+            return result;
         }
-        return res;
-    }
 
-    public Object call() throws ScriptException {
-        Objects.requireNonNull(this.script, "Script is null");
-        final SimpleBindings bindings = new SimpleBindings();
-        this.engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
-        final Object res;
-        if (this.engine instanceof Compilable && this.compiledScript != null) {
-            res = this.compiledScript.eval(bindings);
-        } else {
-            res = this.engine.eval(this.script);
+        @Override
+        public Result call(final Map<String, Object> vars) throws ScriptException {
+            final Result result = new Result(vars);
+            result.value(this.engine.eval(this.script, result.context()));
+            return result;
         }
-        return res;
     }
 
-    public Object call(final String script, final Map<String, Object> variables)
-        throws ScriptException {
-        this.engine.setBindings(new SimpleBindings(variables), ScriptContext.ENGINE_SCOPE);
-        return this.engine.eval(script);
+    class PrecompiledScript implements Script {
+        private final CompiledScript script;
+
+        public PrecompiledScript(final ScriptEngine engine, final String script) {
+            if (!(engine instanceof Compilable)) {
+                throw new ArtipieException(
+                    String.format("Scripting engine '%s' does not support compilation", engine)
+                );
+            }
+            try {
+                this.script = ((Compilable) engine).compile(script);
+            } catch (ScriptException exc) {
+                throw new ArtipieException(exc);
+            }
+        }
+
+        @Override
+        public Result call() throws ScriptException {
+            final Result result = new Result();
+            result.value(this.script.eval(result.context()));
+            return result;
+        }
+
+        public Result call(final Map<String, Object> vars) throws ScriptException {
+            final Result result = new Result(vars);
+            result.value(this.script.eval(result.context()));
+            return result;
+        }
     }
 
-    public Object call(final String script)
-        throws ScriptException {
-        this.engine.setBindings(new SimpleBindings(), ScriptContext.ENGINE_SCOPE);
-        return this.engine.eval(script);
-    }
+    class Result {
+        private final ScriptContext context;
+        private Object value;
 
-    public Object variable(final String name) {
-        return this.engine.getBindings(ScriptContext.ENGINE_SCOPE).get(name);
-//        return this.engine.get(name);
+        public Result() {
+            this.context = new SimpleScriptContext();
+        }
+
+        public Result(final Map<String, Object> vars) {
+            this();
+            context.setBindings(new SimpleBindings(vars), ScriptContext.ENGINE_SCOPE);
+        }
+
+        public Object value() {
+            return this.value;
+        }
+
+        public Object variable(final String name) {
+            return this.context.getBindings(ScriptContext.ENGINE_SCOPE).get(name);
+        }
+
+        private ScriptContext context() {
+            return context;
+        }
+
+        private void value(final Object value) {
+            this.value = value;
+        }
     }
 }

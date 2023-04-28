@@ -5,6 +5,7 @@
 package com.artipie.settings;
 
 import com.amihaiemil.eoyaml.YamlMapping;
+import com.amihaiemil.eoyaml.YamlSequence;
 import com.artipie.api.ssl.KeyStore;
 import com.artipie.asto.Storage;
 import com.artipie.settings.cache.ArtipieCaches;
@@ -67,4 +68,9 @@ public interface Settings {
      */
     ArtipieCaches caches();
 
+    /**
+     * Crontab settings
+     * @return yaml sequence of crontab strings.
+     */
+    Optional<YamlSequence> crontab();
 }

@@ -318,7 +318,6 @@ SOFTWARE.
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
       <version>2.0.0</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>log4j</groupId>
@@ -451,6 +450,21 @@ SOFTWARE.
       <artifactId>quartz</artifactId>
       <version>2.3.2</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy-jsr223</artifactId>
+      <version>4.0.11</version>
+    </dependency>
+    <dependency>
+      <groupId>org.python</groupId>
+      <artifactId>jython-standalone</artifactId>
+      <version>2.7.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jruby</groupId>
+      <artifactId>jruby</artifactId>
+      <version>9.4.2.0</version>
+    </dependency>
   </dependencies>
   <build>
     <testResources>
@@ -476,7 +490,6 @@ SOFTWARE.
             <excludes combine.children="append">
               <exclude>checkstyle:.*/src/test/resources/.*</exclude>
               <exclude>checkstyle:.*/src/main/resources/swagger-ui/.*</exclude>
-              <exclude>checkstyle:.*/src/test/java/com/artipie/settings/cache/GuavaFiltersCacheTest.java</exclude>
               <exclude>pmd:.*/src/test/resources/.*</exclude>
               <exclude>pmd:.*/src/main/resources/swagger-ui/.*</exclude>
             </excludes>

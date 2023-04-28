@@ -130,6 +130,7 @@ public final class VertxMain {
         this.startRepos(vertx, settings, this.port, jwt);
         vertx.deployVerticle(new RestApi(settings, apiport, jwt));
         this.scheduler.start();
+        this.scheduler.loadCrontab(settings);
         return main;
     }
 

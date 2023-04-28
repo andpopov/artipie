@@ -5,8 +5,18 @@
 
 package com.artipie.scheduler;
 
+import com.amihaiemil.eoyaml.YamlNode;
 import com.artipie.ArtipieException;
+import com.artipie.scripting.ScriptRunner;
+import com.artipie.settings.Settings;
+import static com.cronutils.model.CronType.QUARTZ;
+import com.cronutils.model.definition.CronDefinition;
+import com.cronutils.model.definition.CronDefinitionBuilder;
+import com.cronutils.parser.CronParser;
+import java.util.stream.Collectors;
 import org.quartz.CronScheduleBuilder;
+import org.quartz.JobBuilder;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
@@ -102,5 +112,38 @@ public final class ArtipieScheduler {
         } catch (SchedulerException exc) {
             throw new ArtipieException(exc);
         }
+    }
+
+    public void loadCrontab(final Settings settings) {
+        final CronDefinition cronDefinition = CronDefinitionBuilder.instanceDefinitionFor(QUARTZ);
+        final CronParser parser = new CronParser(cronDefinition);
+        settings.crontab()
+            .map(crontab ->
+                crontab.values().stream()
+                .map(YamlNode::asMapping)
+                .map(yaml -> {
+                    final String key = yaml.string("key");
+                    final String cronexp = yaml.string("cronexp");
+                    boolean valid = false;
+                    try {
+                        parser.parse(cronexp).validate();
+                        valid = true;
+                    } catch (IllegalArgumentException exc) {}
+                    if (valid) {
+                        final JobDataMap data = new JobDataMap();
+                        data.put("key", key);
+                        JobDetail job = JobBuilder
+                            .newJob()
+                            .ofType(ScriptRunner.class)
+                            .withIdentity(String.format("%s %s", cronexp, key))
+                            .setJobData(data)
+                            .build();
+                        scheduleJob(job, cronexp);
+                    }
+                    return null;
+                })
+                .collect(Collectors.toList())
+            )
+            .stream().collect(Collectors.toList());
     }
 }

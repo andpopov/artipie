@@ -55,16 +55,24 @@ public final class ArtipieScheduler {
     }
 
     /**
-     * Schedule.
+     * Schedule job.
+     * Examples of cron expressions:
+     * <ul>
+     *     <li>"0 25 11 * * ?" means "11:25am every day"</li>
+     *     <li>"0 0 11-15 * * ?" means "11AM and 3PM every day"</li>
+     *     <li>"0 0 11-15 * * SAT-SUN" means "between 11AM and 3PM on weekends SAT-SUN"</li>
+     * </ul>
+     * @param job Job details
+     * @param cronexp Cron expression in format {@link org.quartz.CronExpression}
      */
-    public void scheduleJob(final JobDetail job, final String cronExpression) {
+    public void scheduleJob(final JobDetail job, final String cronexp) {
         try {
             Trigger trigger = TriggerBuilder.newTrigger()
                 .withIdentity(
                     String.format("trigger-%s", job.getKey()),
                     "cron-group"
                 )
-                .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
+                .withSchedule(CronScheduleBuilder.cronSchedule(cronexp))
                 .forJob(job)
                 .build();
             this.scheduler.scheduleJob(job, trigger);
@@ -74,9 +82,9 @@ public final class ArtipieScheduler {
     }
 
     /**
-     * Schedule.
+     * Clear all jobs and triggers.
      */
-    public void clearJobs() {
+    public void clearAll() {
         try {
             this.scheduler.clear();
         } catch (SchedulerException exc) {
@@ -86,6 +94,7 @@ public final class ArtipieScheduler {
 
     /**
      * Cancel job.
+     * @param job job key
      */
     public void cancelJob(final JobKey job) {
         try {

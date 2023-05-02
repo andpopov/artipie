@@ -1,11 +1,15 @@
+/*
+ * The MIT License (MIT) Copyright (c) 2020-2021 artipie.com
+ * https://github.com/artipie/artipie/LICENSE.txt
+ */
 package com.artipie.scripting;
 
-import com.artipie.ArtipieException;
 import com.artipie.asto.Key;
 import com.artipie.asto.blocking.BlockingStorage;
 import com.artipie.settings.Settings;
 import java.util.Optional;
 import javax.script.ScriptException;
+import com.jcabi.log.Logger;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -20,11 +24,19 @@ public class ScriptRunner implements Job {
             extension(key.toString())
                 .flatMap(ext -> script(ext, new String(storage.value(key))))
                 .map(script -> {
+                    Optional<Script.Result> result;
                     try {
-                        return script.call();
-                    } catch (ScriptException e) {
-                        throw new ArtipieException(e);
+                        result = Optional.of(script.call());
+                    } catch (ScriptException exc) {
+                        Logger.error(
+                                ScriptRunner.class,
+                                "Execution error in script %s %[exception]",
+                                key.toString(),
+                                exc
+                        );
+                        result = Optional.empty();
                     }
+                    return result;
                 });
         }
     }

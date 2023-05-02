@@ -27,6 +27,7 @@ import org.quartz.impl.StdSchedulerFactory;
 
 /**
  * Scheduler.
+ * @since 0.29
  */
 public final class ArtipieScheduler {
     /**
@@ -132,6 +133,7 @@ public final class ArtipieScheduler {
                     if (valid) {
                         final JobDataMap data = new JobDataMap();
                         data.put("key", key);
+                        data.put("settings", settings);
                         JobDetail job = JobBuilder
                             .newJob()
                             .ofType(ScriptRunner.class)

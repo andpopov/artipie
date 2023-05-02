@@ -16,27 +16,70 @@ import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
 
+/**
+ * Script.
+ *
+ * @since 0.30
+ */
 public interface Script {
-    ScriptEngineManager manager = new ScriptEngineManager();
+    ScriptEngineManager MANAGER = new ScriptEngineManager();
 
+    /**
+     * Call script.
+     * @return Result of script execution.
+     * @throws ScriptException
+     */
     Result call() throws ScriptException;
 
+    /**
+     * Call script by passing environment variables.
+     * @param vars environment variables
+     * @return Result of script execution.
+     * @throws ScriptException
+     */
     Result call(final Map<String, Object> vars) throws ScriptException;
 
+    /**
+     * Create instance of {@link Script}
+     * @param name Name of scripting engine.
+     * @param script Script code
+     * @return Script
+     */
     static Script newScript(final String name, final String script) {
-        final ScriptEngine engine = manager.getEngineByName(name);
+        final ScriptEngine engine = MANAGER.getEngineByName(name);
         return new StandardScript(engine, script);
     }
 
+    /**
+     * Create precompiled instance of {@link Script}
+     * @param name Name of scripting engine.
+     * @param script Script code
+     * @return Script
+     */
     static Script newCompiledScript(final String name, final String script) {
-        final ScriptEngine engine = manager.getEngineByName(name);
+        final ScriptEngine engine = MANAGER.getEngineByName(name);
         return new PrecompiledScript(engine, script);
     }
 
+    /**
+     * Standard implementation of {@link Script}
+     */
     class StandardScript implements Script {
+        /**
+         * Scripting engine.
+         */
         private final ScriptEngine engine;
+
+        /**
+         * Script code.
+         */
         private final String script;
 
+        /**
+         * Ctor
+         * @param engine Scripting engine
+         * @param script Script code
+         */
         public StandardScript(final ScriptEngine engine, final String script) {
             this.engine = engine;
             this.script = Objects.requireNonNull(script, "Script is null");
@@ -57,9 +100,20 @@ public interface Script {
         }
     }
 
+    /**
+     * Precompiled implementation of {@link Script}. Should be used for multiple invocations of script.
+     */
     class PrecompiledScript implements Script {
+        /**
+         * Compiled script.
+         */
         private final CompiledScript script;
 
+        /**
+         * Ctor.
+         * @param engine Scripting engine
+         * @param script Script code
+         */
         public PrecompiledScript(final ScriptEngine engine, final String script) {
             if (!(engine instanceof Compilable)) {
                 throw new ArtipieException(
@@ -87,33 +141,67 @@ public interface Script {
         }
     }
 
+    /**
+     * Result of script invocation.
+     */
     class Result {
+        /**
+         * Script context.
+         */
         private final ScriptContext context;
-        private Object value;
 
+        /**
+         * Resulting value.
+         */
+        private Object val;
+
+        /**
+         * Ctor.
+         */
         public Result() {
             this.context = new SimpleScriptContext();
         }
 
+        /**
+         * Ctor.
+         * @param vars Environment variables
+         */
         public Result(final Map<String, Object> vars) {
             this();
             context.setBindings(new SimpleBindings(vars), ScriptContext.ENGINE_SCOPE);
         }
 
+        /**
+         * Resulting value
+         * @return Value
+         */
         public Object value() {
-            return this.value;
+            return this.val;
         }
 
+        /**
+         * Environment variable by name.
+         * @param name Environment variable
+         * @return
+         */
         public Object variable(final String name) {
             return this.context.getBindings(ScriptContext.ENGINE_SCOPE).get(name);
         }
 
+        /**
+         * Script context
+         * @return ScriptContext
+         */
         private ScriptContext context() {
             return context;
         }
 
+        /**
+         * Setter for resulting value.
+         * @param value
+         */
         private void value(final Object value) {
-            this.value = value;
+            this.val = value;
         }
     }
 }

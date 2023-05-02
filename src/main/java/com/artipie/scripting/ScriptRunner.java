@@ -38,6 +38,8 @@ public class ScriptRunner implements Job {
                     }
                     return result;
                 });
+        } else {
+            Logger.warn(ScriptRunner.class, "Cannot find script %s", key.toString());
         }
     }
 

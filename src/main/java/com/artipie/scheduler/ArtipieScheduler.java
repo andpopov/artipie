@@ -9,7 +9,7 @@ import com.amihaiemil.eoyaml.YamlNode;
 import com.artipie.ArtipieException;
 import com.artipie.scripting.ScriptRunner;
 import com.artipie.settings.Settings;
-import static com.cronutils.model.CronType.QUARTZ;
+import com.cronutils.model.CronType;
 import com.cronutils.model.definition.CronDefinition;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.parser.CronParser;
@@ -48,7 +48,7 @@ public final class ArtipieScheduler {
         try {
             final StdSchedulerFactory factory = new StdSchedulerFactory();
             this.scheduler = factory.getScheduler();
-            scheduler.start();
+            this.scheduler.start();
         } catch (SchedulerException exc) {
             throw new ArtipieException(exc);
         }
@@ -115,8 +115,21 @@ public final class ArtipieScheduler {
         }
     }
 
+    /**
+     * Loads crontab from settings.
+     * Format is:
+     * <pre>
+     *     meta:
+     *       crontab:
+     *         - key: scripts/script1.groovy
+     *           cronexp: * * 10 * * ?
+     *         - key: scripts/script2.groovy
+     *           cronexp: * * 11 * * ?
+     * <pre/>
+     * @param settings Artipie settings
+     */
     public void loadCrontab(final Settings settings) {
-        final CronDefinition cronDefinition = CronDefinitionBuilder.instanceDefinitionFor(QUARTZ);
+        final CronDefinition cronDefinition = CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ);
         final CronParser parser = new CronParser(cronDefinition);
         settings.crontab()
             .map(crontab ->

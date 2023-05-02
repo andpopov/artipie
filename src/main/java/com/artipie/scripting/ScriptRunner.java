@@ -14,7 +14,13 @@ import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-public class ScriptRunner implements Job {
+/**
+ * Script runner.
+ * Job for running script by quartz
+ *
+ * @since 0.30
+ */
+public final class ScriptRunner implements Job {
     @Override
     public void execute(final JobExecutionContext context) throws JobExecutionException {
         final Settings settings = (Settings) context.getJobDetail().getJobDataMap().get("settings");
@@ -23,27 +29,35 @@ public class ScriptRunner implements Job {
         if (storage.exists(key)) {
             extension(key.toString())
                 .flatMap(ext -> script(ext, new String(storage.value(key))))
-                .map(script -> {
-                    Optional<Script.Result> result;
-                    try {
-                        result = Optional.of(script.call());
-                    } catch (ScriptException exc) {
-                        Logger.error(
+                .map(
+                    script -> {
+                        Optional<Script.Result> result;
+                        try {
+                            result = Optional.of(script.call());
+                        } catch (final ScriptException exc) {
+                            Logger.error(
                                 ScriptRunner.class,
                                 "Execution error in script %s %[exception]",
                                 key.toString(),
                                 exc
-                        );
-                        result = Optional.empty();
+                            );
+                            result = Optional.empty();
+                        }
+                        return result;
                     }
-                    return result;
-                });
+                );
         } else {
             Logger.warn(ScriptRunner.class, "Cannot find script %s", key.toString());
         }
     }
 
-    private Optional<Script> script(final String ext, final String script) {
+    /**
+     * Create instance of Script by script-file extension and script code.
+     * @param ext Extension of script-file.
+     * @param script Script code.
+     * @return Script instance
+     */
+    private static Optional<Script> script(final String ext, final String script) {
         final Optional<Script> res;
         switch (ext) {
             case "groovy":
@@ -60,15 +74,21 @@ public class ScriptRunner implements Job {
                 break;
             default:
                 res = Optional.empty();
+                break;
         }
         return res;
     }
 
-    private Optional<String> extension(final String key) {
-        final int pos = key.lastIndexOf('.');
+    /**
+     * Obtain extension of filename.
+     * @param filename Name of file.
+     * @return Extension.
+     */
+    private static Optional<String> extension(final String filename) {
+        final int pos = filename.lastIndexOf('.');
         final Optional<String> res;
         if (pos >= 0) {
-            res = Optional.of(key.substring(pos + 1));
+            res = Optional.of(filename.substring(pos + 1));
         } else {
             res = Optional.empty();
         }

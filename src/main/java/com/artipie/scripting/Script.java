@@ -22,47 +22,53 @@ import javax.script.SimpleScriptContext;
  * @since 0.30
  */
 public interface Script {
+    /**
+     * Script engine manager.
+     */
     ScriptEngineManager MANAGER = new ScriptEngineManager();
 
     /**
      * Call script.
      * @return Result of script execution.
-     * @throws ScriptException
+     * @throws ScriptException Script execution exception
      */
     Result call() throws ScriptException;
 
     /**
      * Call script by passing environment variables.
-     * @param vars environment variables
+     * @param vars Environment variables
      * @return Result of script execution.
-     * @throws ScriptException
+     * @throws ScriptException Script execution exception
      */
-    Result call(final Map<String, Object> vars) throws ScriptException;
+    Result call(Map<String, Object> vars) throws ScriptException;
 
     /**
-     * Create instance of {@link Script}
+     * Create instance of {@link Script}.
      * @param name Name of scripting engine.
      * @param script Script code
      * @return Script
      */
+    @SuppressWarnings("PMD.ProhibitPublicStaticMethods")
     static Script newScript(final String name, final String script) {
-        final ScriptEngine engine = MANAGER.getEngineByName(name);
+        final ScriptEngine engine = Script.MANAGER.getEngineByName(name);
         return new StandardScript(engine, script);
     }
 
     /**
-     * Create precompiled instance of {@link Script}
+     * Create precompiled instance of {@link Script}.
      * @param name Name of scripting engine.
      * @param script Script code
      * @return Script
      */
+    @SuppressWarnings("PMD.ProhibitPublicStaticMethods")
     static Script newCompiledScript(final String name, final String script) {
-        final ScriptEngine engine = MANAGER.getEngineByName(name);
+        final ScriptEngine engine = Script.MANAGER.getEngineByName(name);
         return new PrecompiledScript(engine, script);
     }
 
     /**
-     * Standard implementation of {@link Script}
+     * Standard implementation of {@link Script}.
+     * @since 0.30
      */
     class StandardScript implements Script {
         /**
@@ -76,7 +82,7 @@ public interface Script {
         private final String script;
 
         /**
-         * Ctor
+         * Ctor.
          * @param engine Scripting engine
          * @param script Script code
          */
@@ -101,8 +107,11 @@ public interface Script {
     }
 
     /**
-     * Precompiled implementation of {@link Script}. Should be used for multiple invocations of script.
+     * Precompiled implementation of {@link Script}.
+     * Should be used for multiple invocations of script.
+     * @since 0.30
      */
+    @SuppressWarnings("PMD.ConstructorOnlyInitializesOrCallOtherConstructors")
     class PrecompiledScript implements Script {
         /**
          * Compiled script.
@@ -122,7 +131,7 @@ public interface Script {
             }
             try {
                 this.script = ((Compilable) engine).compile(script);
-            } catch (ScriptException exc) {
+            } catch (final ScriptException exc) {
                 throw new ArtipieException(exc);
             }
         }
@@ -134,6 +143,7 @@ public interface Script {
             return result;
         }
 
+        @Override
         public Result call(final Map<String, Object> vars) throws ScriptException {
             final Result result = new Result(vars);
             result.value(this.script.eval(result.context()));
@@ -143,7 +153,14 @@ public interface Script {
 
     /**
      * Result of script invocation.
+     * @since 0.30
      */
+    @SuppressWarnings(
+        {
+            "PMD.OnlyOneConstructorShouldDoInitialization",
+            "PMD.ConstructorOnlyInitializesOrCallOtherConstructors"
+        }
+    )
     class Result {
         /**
          * Script context.
@@ -168,11 +185,11 @@ public interface Script {
          */
         public Result(final Map<String, Object> vars) {
             this();
-            context.setBindings(new SimpleBindings(vars), ScriptContext.ENGINE_SCOPE);
+            this.context.setBindings(new SimpleBindings(vars), ScriptContext.ENGINE_SCOPE);
         }
 
         /**
-         * Resulting value
+         * Resulting value.
          * @return Value
          */
         public Object value() {
@@ -182,23 +199,23 @@ public interface Script {
         /**
          * Environment variable by name.
          * @param name Environment variable
-         * @return
+         * @return Environment variable
          */
         public Object variable(final String name) {
             return this.context.getBindings(ScriptContext.ENGINE_SCOPE).get(name);
         }
 
         /**
-         * Script context
+         * Script context.
          * @return ScriptContext
          */
         private ScriptContext context() {
-            return context;
+            return this.context;
         }
 
         /**
          * Setter for resulting value.
-         * @param value
+         * @param value Resulting value
          */
         private void value(final Object value) {
             this.val = value;

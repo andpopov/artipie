@@ -4,14 +4,34 @@
  */
 package com.artipie.scripting;
 
+/**
+ * Python Script.
+ *
+ * @since 0.30
+ */
 public interface PythonScript {
+    /**
+     * Name of scripting engine.
+     */
     String NAME = "python";
 
+    /**
+     * Create instance of {@link Script}.
+     * @param script Script code
+     * @return Script
+     */
+    @SuppressWarnings("PMD.ProhibitPublicStaticMethods")
     static Script newScript(final String script) {
-        return Script.newScript(NAME, script);
+        return Script.newScript(PythonScript.NAME, script);
     }
 
+    /**
+     * Create precompiled instance of {@link Script}.
+     * @param script Script code
+     * @return Script
+     */
+    @SuppressWarnings("PMD.ProhibitPublicStaticMethods")
     static Script newCompiledScript(final String script) {
-        return Script.newCompiledScript(NAME, script);
+        return Script.newCompiledScript(PythonScript.NAME, script);
     }
 }

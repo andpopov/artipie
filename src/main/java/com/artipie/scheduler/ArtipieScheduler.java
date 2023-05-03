@@ -144,7 +144,7 @@ public final class ArtipieScheduler {
                                 } catch (final IllegalArgumentException exc) {
                                     Logger.error(
                                         ArtipieScheduler.class,
-                                        "Invalid cron expression %s %[exception]",
+                                        "Invalid cron expression %s %[exception]s",
                                         cronexp,
                                         exc
                                     );

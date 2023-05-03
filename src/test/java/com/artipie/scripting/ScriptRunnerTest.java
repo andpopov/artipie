@@ -18,6 +18,7 @@ import org.junit.jupiter.api.io.TempDir;
  * Tests for {@link GroovyScript}.
  *
  * @since 0.30
+ * @checkstyle MagicNumberCheck (500 lines)
  */
 public class ScriptRunnerTest {
     /**

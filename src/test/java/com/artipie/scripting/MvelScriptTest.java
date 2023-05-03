@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
  * Tests for {@link GroovyScript}.
  *
  * @since 0.30
+ * @checkstyle MagicNumberCheck (500 lines)
  */
 public class MvelScriptTest {
     @Test

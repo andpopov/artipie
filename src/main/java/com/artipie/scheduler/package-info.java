@@ -6,6 +6,6 @@
 /**
  * Artipie scheduler.
  *
- * @since 0.29
+ * @since 0.30
  */
 package com.artipie.scheduler;

@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Tests for {@link GroovyScript}.
  *
- * @since 0.28
+ * @since 0.30
  */
 public class MvelScriptTest {
     @Test

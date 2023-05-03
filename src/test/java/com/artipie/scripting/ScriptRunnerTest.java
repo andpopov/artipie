@@ -17,7 +17,7 @@ import org.junit.jupiter.api.io.TempDir;
 /**
  * Tests for {@link GroovyScript}.
  *
- * @since 0.28
+ * @since 0.30
  */
 public class ScriptRunnerTest {
     /**

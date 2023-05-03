@@ -6,6 +6,6 @@
 /**
  * Artipie scripting.
  *
- * @since 0.29
+ * @since 0.30
  */
 package com.artipie.scripting;

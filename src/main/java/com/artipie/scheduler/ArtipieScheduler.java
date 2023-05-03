@@ -28,7 +28,7 @@ import org.quartz.impl.StdSchedulerFactory;
 
 /**
  * Scheduler.
- * @since 0.29
+ * @since 0.30
  */
 public final class ArtipieScheduler {
     /**

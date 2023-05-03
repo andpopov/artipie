@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
  * @since 0.30
  * @checkstyle MagicNumberCheck (500 lines)
  */
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class RubyScriptTest {
     @Test
     public void standardScript() throws ScriptException {

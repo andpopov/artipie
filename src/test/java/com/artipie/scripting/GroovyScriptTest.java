@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
  * @since 0.30
  * @checkstyle MagicNumberCheck (500 lines)
  */
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class GroovyScriptTest {
     @Test
     public void standardScript() throws ScriptException {
@@ -48,6 +49,5 @@ public class GroovyScriptTest {
             GroovyScript.newCompiledScript("a = a * 3").call(variables).variable("a"),
             new IsEqual<>(12)
         );
-
     }
 }

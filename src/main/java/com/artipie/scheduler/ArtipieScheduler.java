@@ -13,6 +13,7 @@ import com.cronutils.model.CronType;
 import com.cronutils.model.definition.CronDefinition;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.parser.CronParser;
+import com.jcabi.log.Logger;
 import java.util.stream.Collectors;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.JobBuilder;
@@ -49,7 +50,7 @@ public final class ArtipieScheduler {
             final StdSchedulerFactory factory = new StdSchedulerFactory();
             this.scheduler = factory.getScheduler();
             this.scheduler.start();
-        } catch (SchedulerException exc) {
+        } catch (final SchedulerException exc) {
             throw new ArtipieException(exc);
         }
     }
@@ -60,7 +61,7 @@ public final class ArtipieScheduler {
     public void stop() {
         try {
             this.scheduler.shutdown(true);
-        } catch (SchedulerException exc) {
+        } catch (final SchedulerException exc) {
             throw new ArtipieException(exc);
         }
     }
@@ -78,7 +79,7 @@ public final class ArtipieScheduler {
      */
     public void scheduleJob(final JobDetail job, final String cronexp) {
         try {
-            Trigger trigger = TriggerBuilder.newTrigger()
+            final Trigger trigger = TriggerBuilder.newTrigger()
                 .withIdentity(
                     String.format("trigger-%s", job.getKey()),
                     "cron-group"
@@ -87,7 +88,7 @@ public final class ArtipieScheduler {
                 .forJob(job)
                 .build();
             this.scheduler.scheduleJob(job, trigger);
-        } catch (SchedulerException exc) {
+        } catch (final SchedulerException exc) {
             throw new ArtipieException(exc);
         }
     }
@@ -98,19 +99,19 @@ public final class ArtipieScheduler {
     public void clearAll() {
         try {
             this.scheduler.clear();
-        } catch (SchedulerException exc) {
+        } catch (final SchedulerException exc) {
             throw new ArtipieException(exc);
         }
     }
 
     /**
      * Cancel job.
-     * @param job job key
+     * @param job Job key
      */
     public void cancelJob(final JobKey job) {
         try {
             this.scheduler.deleteJob(job);
-        } catch (SchedulerException exc) {
+        } catch (final SchedulerException exc) {
             throw new ArtipieException(exc);
         }
     }
@@ -125,39 +126,49 @@ public final class ArtipieScheduler {
      *           cronexp: * * 10 * * ?
      *         - key: scripts/script2.groovy
      *           cronexp: * * 11 * * ?
-     * <pre/>
+     * </pre>
      * @param settings Artipie settings
      */
     public void loadCrontab(final Settings settings) {
-        final CronDefinition cronDefinition = CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ);
-        final CronParser parser = new CronParser(cronDefinition);
+        final CronDefinition crondef =
+            CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ);
+        final CronParser parser = new CronParser(crondef);
         settings.crontab()
-            .map(crontab ->
-                crontab.values().stream()
-                .map(YamlNode::asMapping)
-                .map(yaml -> {
-                    final String key = yaml.string("key");
-                    final String cronexp = yaml.string("cronexp");
-                    boolean valid = false;
-                    try {
-                        parser.parse(cronexp).validate();
-                        valid = true;
-                    } catch (IllegalArgumentException exc) {}
-                    if (valid) {
-                        final JobDataMap data = new JobDataMap();
-                        data.put("key", key);
-                        data.put("settings", settings);
-                        JobDetail job = JobBuilder
-                            .newJob()
-                            .ofType(ScriptRunner.class)
-                            .withIdentity(String.format("%s %s", cronexp, key))
-                            .setJobData(data)
-                            .build();
-                        scheduleJob(job, cronexp);
-                    }
-                    return null;
-                })
-                .collect(Collectors.toList())
+            .map(
+                crontab ->
+                    crontab.values().stream()
+                        .map(YamlNode::asMapping)
+                        .map(
+                            yaml -> {
+                                final String key = yaml.string("key");
+                                final String cronexp = yaml.string("cronexp");
+                                boolean valid = false;
+                                try {
+                                    parser.parse(cronexp).validate();
+                                    valid = true;
+                                } catch (final IllegalArgumentException exc) {
+                                    Logger.error(
+                                        ArtipieScheduler.class,
+                                        "Invalid cron expression %s %[exception]",
+                                        cronexp,
+                                        exc
+                                    );
+                                }
+                                if (valid) {
+                                    final JobDataMap data = new JobDataMap();
+                                    data.put("key", key);
+                                    data.put("settings", settings);
+                                    final JobDetail job = JobBuilder
+                                        .newJob()
+                                        .ofType(ScriptRunner.class)
+                                        .withIdentity(String.format("%s %s", cronexp, key))
+                                        .setJobData(data)
+                                        .build();
+                                    this.scheduleJob(job, cronexp);
+                                }
+                                return null;
+                            })
+                        .collect(Collectors.toList())
             )
             .stream().collect(Collectors.toList());
     }

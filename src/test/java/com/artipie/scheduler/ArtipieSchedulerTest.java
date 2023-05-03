@@ -6,10 +6,8 @@ package com.artipie.scheduler;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.sql.Ref;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-
 import com.amihaiemil.eoyaml.Yaml;
 import com.artipie.asto.Key;
 import com.artipie.asto.blocking.BlockingStorage;
@@ -26,7 +24,7 @@ import org.quartz.*;
 /**
  * Test for ArtipieScheduler.
  *
- * @since 0.28.0
+ * @since 0.30
  * @checkstyle MagicNumberCheck (500 lines)
  */
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")

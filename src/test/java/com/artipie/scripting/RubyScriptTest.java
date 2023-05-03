@@ -7,6 +7,8 @@ package com.artipie.scripting;
 import java.util.HashMap;
 import java.util.Map;
 import javax.script.ScriptException;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.core.IsEqual;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -23,12 +25,14 @@ public class RubyScriptTest {
         variables.put("a", 2);
         RubyScript.newScript("puts a").call(variables);
         variables.put("a", 3);
-        System.out.println(
-            RubyScript.newScript("a * 2").call(variables).value()
+        MatcherAssert.assertThat(
+            RubyScript.newScript("a * 2").call(variables).value(),
+            new IsEqual<>(6L)
         );
         variables.put("a", 4);
-        System.out.println(
-            RubyScript.newScript("a = a * 3").call(variables).variable("a")
+        MatcherAssert.assertThat(
+            RubyScript.newScript("a = a * 3").call(variables).variable("a"),
+            new IsEqual<>(12L)
         );
     }
 

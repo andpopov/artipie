@@ -43,12 +43,14 @@ public class RubyScriptTest {
         variables.put("a", 2);
         RubyScript.newCompiledScript("puts a").call(variables);
         variables.put("a", 3);
-        System.out.println(
-            RubyScript.newCompiledScript("a * 2").call(variables).value()
+        MatcherAssert.assertThat(
+            RubyScript.newCompiledScript("a * 2").call(variables).value(),
+            new IsEqual<>(6L)
         );
         variables.put("a", 4);
-        System.out.println(
-            RubyScript.newCompiledScript("a = a * 3").call(variables).variable("a")
+        MatcherAssert.assertThat(
+            RubyScript.newCompiledScript("a = a * 3").call(variables).variable("a"),
+            new IsEqual<>(12L)
         );
     }
 }

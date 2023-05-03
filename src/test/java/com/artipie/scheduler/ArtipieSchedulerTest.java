@@ -4,28 +4,33 @@
  */
 package com.artipie.scheduler;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import com.amihaiemil.eoyaml.Yaml;
 import com.artipie.asto.Key;
 import com.artipie.asto.blocking.BlockingStorage;
 import com.artipie.asto.fs.FileStorage;
 import com.artipie.settings.YamlSettings;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import org.awaitility.Awaitility;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.IsEqual;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.quartz.*;
+import org.quartz.Job;
+import org.quartz.JobBuilder;
+import org.quartz.JobDataMap;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 
 /**
  * Test for ArtipieScheduler.
  *
  * @since 0.30
- * @checkstyle MagicNumberCheck (500 lines)
+ * @checkstyle ClassDataAbstractionCouplingCheck (500 lines)
+ * @checkstyle VisibilityModifierCheck (500 lines)
  */
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class ArtipieSchedulerTest {
@@ -42,6 +47,7 @@ public class ArtipieSchedulerTest {
 
     /**
      * Before each method creates test data storage instance.
+     * @since 0.30
      */
     @BeforeEach
     void init() {
@@ -53,16 +59,15 @@ public class ArtipieSchedulerTest {
         final AtomicReference<String> ref = new AtomicReference<>();
         final ArtipieScheduler scheduler = new ArtipieScheduler();
         scheduler.start();
-        final JobDataMap data = new JobDataMap();
-        data.put("ref", ref);
+        final JobDataMap vars = new JobDataMap();
+        vars.put("ref", ref);
         scheduler.scheduleJob(
-                JobBuilder
+            JobBuilder
                 .newJob()
                 .ofType(TestJob.class)
                 .withIdentity("test-job")
-                .setJobData(data)
-                .build()
-            ,
+                .setJobData(vars)
+                .build(),
             "0/5 * * * * ?"
         );
         Awaitility.waitAtMost(1, TimeUnit.MINUTES).until(() -> ref.get() != null);
@@ -76,44 +81,48 @@ public class ArtipieSchedulerTest {
     @Test
     void runCronJob() throws IOException {
         final YamlSettings settings = new YamlSettings(
-                Yaml.createYamlInput(
-                        String.join(
-                                System.lineSeparator(),
-                                "meta:",
-                                "  storage:",
-                                "    type: fs",
-                                String.format("    path: %s", this.temp.toString()),
-                                "  crontab:",
-                                "    - key: scripts/script.groovy",
-                                "      cronexp: */3 * * * * ?"
-                        )
-                ).readYamlMapping()
+            Yaml.createYamlInput(
+                String.join(
+                    System.lineSeparator(),
+                    "meta:",
+                    "  storage:",
+                    "    type: fs",
+                    String.format("    path: %s", this.temp.toString()),
+                    "  crontab:",
+                    "    - key: scripts/script.groovy",
+                    "      cronexp: */3 * * * * ?"
+                )
+            ).readYamlMapping()
         );
-        final String filename = temp.resolve("scripts/result.txt").toString();
+        final String filename = this.temp.resolve("scripts/result.txt").toString();
         final String script = String.join(
-                System.lineSeparator(),
-                String.format("File file = new File('%s')", filename.replace("\\", "\\\\")),
-                "file.write 'Hello world'"
+            System.lineSeparator(),
+            String.format("File file = new File('%s')", filename.replace("\\", "\\\\")),
+            "file.write 'Hello world'"
         );
-        data.save(new Key.From("scripts/script.groovy"), script.getBytes());
+        this.data.save(new Key.From("scripts/script.groovy"), script.getBytes());
         final ArtipieScheduler scheduler = new ArtipieScheduler();
         scheduler.start();
         scheduler.loadCrontab(settings);
         final Key result = new Key.From("scripts/result.txt");
-        Awaitility.waitAtMost(1, TimeUnit.MINUTES).until(() -> data.exists(result));
+        Awaitility.waitAtMost(1, TimeUnit.MINUTES).until(() -> this.data.exists(result));
         scheduler.stop();
         MatcherAssert.assertThat(
-                new String(data.value(result)),
-                new IsEqual<>("Hello world")
+            new String(this.data.value(result)),
+            new IsEqual<>("Hello world")
         );
     }
 
-
-    public static class TestJob implements Job {
+    /**
+     * Job for scheduler.
+     * @since 0.30
+     */
+    public static final class TestJob implements Job {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final JobExecutionContext context) throws JobExecutionException {
-            final AtomicReference<String> ref = (AtomicReference<String>) context.getJobDetail().getJobDataMap().get("ref");
+            final AtomicReference<String> ref =
+                (AtomicReference<String>) context.getJobDetail().getJobDataMap().get("ref");
             ref.set("TestJob is done");
         }
     }

@@ -37,12 +37,6 @@ public final class ArtipieScheduler {
     private Scheduler scheduler;
 
     /**
-     * Ctor.
-     */
-    public ArtipieScheduler() {
-    }
-
-    /**
      * Start scheduler.
      */
     public void start() {
@@ -129,6 +123,7 @@ public final class ArtipieScheduler {
      * </pre>
      * @param settings Artipie settings
      */
+    @SuppressWarnings("PMD.AvoidDuplicateLiterals")
     public void loadCrontab(final Settings settings) {
         final CronDefinition crondef =
             CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ);

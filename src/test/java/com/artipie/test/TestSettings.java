@@ -6,6 +6,7 @@ package com.artipie.test;
 
 import com.amihaiemil.eoyaml.Yaml;
 import com.amihaiemil.eoyaml.YamlMapping;
+import com.amihaiemil.eoyaml.YamlSequence;
 import com.artipie.api.ssl.KeyStore;
 import com.artipie.asto.Storage;
 import com.artipie.asto.memory.InMemoryStorage;
@@ -172,5 +173,10 @@ public final class TestSettings implements Settings {
     @Override
     public ArtipieCaches caches() {
         return this.caches;
+    }
+
+    @Override
+    public Optional<YamlSequence> crontab() {
+        return Optional.empty();
     }
 }

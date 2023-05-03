@@ -88,6 +88,9 @@ public final class VertxMain {
      */
     private final List<VertxSliceServer> servers;
 
+    /**
+     * Scheduler.
+     */
     private final ArtipieScheduler scheduler;
 
     /**

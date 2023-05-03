@@ -69,8 +69,8 @@ public interface Settings {
     ArtipieCaches caches();
 
     /**
-     * Crontab settings
-     * @return yaml sequence of crontab strings.
+     * Crontab settings.
+     * @return Yaml sequence of crontab strings.
      */
     Optional<YamlSequence> crontab();
 }

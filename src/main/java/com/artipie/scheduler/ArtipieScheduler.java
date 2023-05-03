@@ -164,7 +164,6 @@ public final class ArtipieScheduler {
                                 return null;
                             })
                         .collect(Collectors.toList())
-            )
-            .stream().collect(Collectors.toList());
+            );
     }
 }

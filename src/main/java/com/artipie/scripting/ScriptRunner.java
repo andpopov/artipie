@@ -16,7 +16,7 @@ import org.quartz.JobExecutionException;
 
 /**
  * Script runner.
- * Job for running script by quartz
+ * Job for running script in quartz
  *
  * @since 0.30
  */
